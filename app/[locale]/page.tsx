@@ -41,7 +41,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organization) }} />
     <section className="hero">
       <div className="hero-copy"><p className="hero-kicker">Anna&apos;s Dog & More · Zürich</p><h1>{t.home.heroTitle}</h1><p>{t.home.heroBody}</p><div className="hero-actions"><Link className="button primary-button" href={`/${locale}/shop`}>{t.common.discover}<ArrowRight size={18} /></Link><Link className="text-link" href={`/${locale}/about`}>{t.nav.about}</Link></div></div>
-      <div className="hero-image"><Image src="https://laboni.design/media/image/thumbnail/LABONI_Polsterbett_Teddy_beige_L_24_600x600.jpg" alt={locale === "de" ? "Hund in einem cremefarbenen LABONI TEDDY Hundebett" : "Dog in a cream LABONI TEDDY dog bed"} fill priority sizes="(max-width: 768px) 100vw, 56vw" /></div>
+      <figure className="hero-image">
+        <Image
+          src="https://laboni.design/media/image/LABONI_Polsterbett_Teddy_beige_L_24.jpg"
+          alt={locale === "de" ? "Hund in einem cremefarbenen LABONI TEDDY Hundebett" : "Dog in a cream LABONI TEDDY dog bed"}
+          fill
+          preload
+          quality={90}
+          sizes="(max-width: 820px) calc(100vw - 2rem), (max-width: 1440px) 54vw, 700px"
+        />
+        <figcaption><span>LABONI</span><strong>Classic Teddy</strong></figcaption>
+      </figure>
     </section>
 
     <section className="section category-section" id="categories"><div className="section-heading"><h2>{t.home.categories}</h2><Link className="text-link" href={`/${locale}/shop`}>{locale === "de" ? "Alle Kategorien" : "All categories"}<ArrowRight size={17} /></Link></div><div className="category-grid">

@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
       ...(supabaseHostname ? [{ protocol: "https" as const, hostname: supabaseHostname, pathname: "/storage/v1/object/public/product-images/**" }] : []),
     ],
     formats: ["image/avif", "image/webp"],
+    qualities: [75, 90],
   },
   poweredByHeader: false,
   experimental: {
