@@ -298,7 +298,7 @@ end $$;
 
 create or replace function public.next_order_number()
 returns text language sql volatile set search_path = '' as $$
-  select 'AD-' || to_char(now(), 'YYYYMMDD') || '-' || upper(substr(encode(gen_random_bytes(4), 'hex'), 1, 6));
+  select 'AD-' || to_char(now(), 'YYYYMMDD') || '-' || upper(substr(encode(extensions.gen_random_bytes(4), 'hex'), 1, 6));
 $$;
 
 create or replace function public.create_pending_order(
