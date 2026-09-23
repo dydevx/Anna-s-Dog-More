@@ -1,4 +1,5 @@
 import type { Category, Product } from "@/types/catalog";
+import { pdfToyProducts } from "@/data/pdf-toys";
 
 const image = (id: string, url: string, de: string, en: string) => ({
   id,
@@ -27,7 +28,7 @@ export const categories: Category[] = [
       de: "Ausgewählte Halsbänder und Leinen aus hochwertigen Materialien.",
       en: "Selected collars and leashes made from premium materials.",
     },
-    imageUrl: "https://laboni.design/media/image/thumbnail/5011S-101_600x600.jpg",
+    imageUrl: "https://laboni.design/media/image/thumbnail/5011-105_1_600x600.jpg",
     sortOrder: 2,
   },
   {
@@ -93,12 +94,12 @@ export const categories: Category[] = [
       de: "ECO Comfort Füllungen, OrthoMattress und Schutzbezüge.",
       en: "ECO Comfort fillings, OrthoMattress and protective covers.",
     },
-    imageUrl: "https://laboni.design/media/image/thumbnail/50007_600x600.jpg",
+    imageUrl: "https://laboni.design/media/image/thumbnail/50003_600x600.jpg",
     sortOrder: 8,
   },
 ];
 
-export const products: Product[] = [
+const curatedProducts: Product[] = [
   {
     id: "10000000-0000-4000-8000-000000000001",
     categoryId: "00000000-0000-4000-8000-000000000001",
@@ -292,4 +293,9 @@ export const products: Product[] = [
       { id: "20000000-0000-4000-8000-000000000009", sku: "4103S-505", articleNumber: "4103S-505", price: null, currency: "EUR", stockQuantity: 0, active: false, options: { size: "L", fabric: "Teddy", color: "Creme", mattress: "Classic" } },
     ],
   },
+];
+
+export const products: Product[] = [
+  ...pdfToyProducts,
+  ...curatedProducts.filter((product) => product.categorySlug !== "spielen"),
 ];
