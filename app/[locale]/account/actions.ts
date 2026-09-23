@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createUserClient } from "@/lib/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
 
 function localeFrom(formData: FormData) {
   return formData.get("locale") === "en" ? "en" : "de";
@@ -33,7 +34,7 @@ export async function forgotPasswordAction(formData: FormData) {
   const locale = localeFrom(formData);
   try {
     const supabase = await createUserClient();
-    const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const base = getSiteUrl();
     await supabase.auth.resetPasswordForEmail(String(formData.get("email") ?? ""), { redirectTo: `${base}/auth/callback?next=/${locale}/account/reset` });
   } catch { redirect(`/${locale}/account?error=config`); }
   redirect(`/${locale}/account?message=check-email`);

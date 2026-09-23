@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
 import { getCategories, getProducts } from "@/lib/catalog";
+import { getSiteUrl } from "@/lib/site-url";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+  const base = getSiteUrl();
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
   return ["de", "en"].flatMap((locale) => [
     { url: `${base}/${locale}`, changeFrequency: "weekly" as const, priority: 1 },

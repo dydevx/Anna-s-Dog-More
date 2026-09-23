@@ -5,6 +5,7 @@ import { ArrowRight, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { getCategories, getProducts } from "@/lib/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
+import { getSiteUrl } from "@/lib/site-url";
 import { ProductCard } from "@/components/product/product-card";
 
 export const revalidate = 3600;
@@ -33,7 +34,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     "@type": "Store",
     name: "Anna's Dog & More",
     address: { "@type": "PostalAddress", streetAddress: "Leimbachstrasse 200", postalCode: "8041", addressLocality: "Zürich", addressCountry: "CH" },
-    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/${locale}`,
+    url: `${getSiteUrl()}/${locale}`,
   };
 
   return <>

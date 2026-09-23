@@ -16,7 +16,7 @@ export class StripePaymentProvider implements PaymentProvider {
 
   async createPayment(order: PaymentOrder): Promise<PaymentSession> {
     const stripe = client();
-    const base = process.env.NEXT_PUBLIC_SITE_URL;
+    const base = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
     if (!base) throw new Error("SITE_URL_NOT_CONFIGURED");
     const methods: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] = paymentMethodsForCurrency(order.currency);
     const itemTotal = order.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
