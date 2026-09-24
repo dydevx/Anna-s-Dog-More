@@ -11,8 +11,8 @@ import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatMoney } from "@/lib/money";
 
 const languages = {
-  de: { flag: "🇩🇪", code: "DE", name: "Deutsch" },
-  en: { flag: "🇬🇧", code: "EN", name: "English" },
+  de: { flag: "de", code: "DE", name: "Deutsch" },
+  en: { flag: "gb", code: "EN", name: "English" },
 } as const;
 
 function LanguageSwitcher({ locale, pathname, mobile = false }: { locale: Locale; pathname: string; mobile?: boolean }) {
@@ -21,7 +21,7 @@ function LanguageSwitcher({ locale, pathname, mobile = false }: { locale: Locale
       const item = languages[language];
       const href = pathname.replace(/^\/(de|en)(?=\/|$)/, `/${language}`);
       return <Link key={language} className="language-option" data-active={locale === language} href={href} hrefLang={language} aria-current={locale === language ? "page" : undefined} aria-label={item.name} title={item.name}>
-        <span className="language-flag" aria-hidden="true">{item.flag}</span><span className="language-code">{item.code}</span>
+        <span className="language-flag" data-flag={item.flag} aria-hidden="true" /><span className="language-code">{item.code}</span>
       </Link>;
     })}
   </div>;

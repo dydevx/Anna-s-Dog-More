@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SlidersHorizontal, X } from "@phosphor-icons/react";
 import { ProductCard } from "@/components/product/product-card";
 import type { Category, Locale, Product } from "@/types/catalog";
@@ -71,9 +71,6 @@ export function ProductListing({ products, categories, locale, initialCategory, 
     sizes,
     sort,
   }), [activePriceMax, availableOnly, category, colors, materials, sizes, sort]);
-  const deferredFilters = useDeferredValue(filterState);
-  const isFiltering = deferredFilters !== filterState;
-
   const visible = useMemo(() => {
     const includesFacet = (product: Product, selected: string[], keys: string[]) => selected.length === 0 || selected.some((wanted) => {
       const values = [
@@ -84,23 +81,23 @@ export function ProductListing({ products, categories, locale, initialCategory, 
     });
 
     const filtered = products.filter((product) =>
-      (deferredFilters.category === "all" || product.categorySlug === deferredFilters.category)
+      (filterState.category === "all" || product.categorySlug === filterState.category)
       && (!featuredOnly || product.featured)
-      && product.basePrice <= deferredFilters.activePriceMax
-      && includesFacet(product, deferredFilters.materials, ["material", "fabric"])
-      && includesFacet(product, deferredFilters.colors, ["color"])
-      && includesFacet(product, deferredFilters.sizes, ["size"])
-      && (!deferredFilters.availableOnly || product.variants.some((variant) => variant.active && variant.price !== null && variant.stockQuantity > 0))
+      && product.basePrice <= filterState.activePriceMax
+      && includesFacet(product, filterState.materials, ["material", "fabric"])
+      && includesFacet(product, filterState.colors, ["color"])
+      && includesFacet(product, filterState.sizes, ["size"])
+      && (!filterState.availableOnly || product.variants.some((variant) => variant.active && variant.price !== null && variant.stockQuantity > 0))
     );
 
     return filtered.toSorted((a, b) => {
-      if (deferredFilters.sort === "low") return a.basePrice - b.basePrice;
-      if (deferredFilters.sort === "high") return b.basePrice - a.basePrice;
-      if (deferredFilters.sort === "name") return a.name[locale].localeCompare(b.name[locale]);
-      if (deferredFilters.sort === "newest") return Number(b.badge === "new") - Number(a.badge === "new");
+      if (filterState.sort === "low") return a.basePrice - b.basePrice;
+      if (filterState.sort === "high") return b.basePrice - a.basePrice;
+      if (filterState.sort === "name") return a.name[locale].localeCompare(b.name[locale]);
+      if (filterState.sort === "newest") return Number(b.badge === "new") - Number(a.badge === "new");
       return Number(b.featured) - Number(a.featured);
     });
-  }, [deferredFilters, featuredOnly, locale, products]);
+  }, [filterState, featuredOnly, locale, products]);
 
   const toggle = (value: string, selected: string[], setSelected: (value: string[]) => void) => {
     setSelected(selected.includes(value) ? selected.filter((item) => item !== value) : [...selected, value]);
@@ -113,13 +110,13 @@ export function ProductListing({ products, categories, locale, initialCategory, 
     </fieldset>
   ) : null;
 
-  const filters = (
+  const renderFilters = (scope: "sidebar" | "drawer") => (
     <div className="filter-content">
       <div className="filter-mobile-heading"><strong>{t.shop.filter}</strong><button className="icon-button" onClick={() => setFilterOpen(false)} aria-label={t.common.close}><X size={21} /></button></div>
       <fieldset>
         <legend>{t.nav.categories}</legend>
-        <label><input type="radio" name="category" checked={category === "all"} onChange={() => setCategory("all")} />{locale === "de" ? "Alle" : "All"}</label>
-        {categories.map((item) => <label key={item.id}><input type="radio" name="category" checked={category === item.slug} onChange={() => setCategory(item.slug)} />{item.name[locale]}</label>)}
+        <label><input type="radio" name={`category-${scope}`} checked={category === "all"} onChange={() => setCategory("all")} />{locale === "de" ? "Alle" : "All"}</label>
+        {categories.map((item) => <label key={item.id}><input type="radio" name={`category-${scope}`} checked={category === item.slug} onChange={() => setCategory(item.slug)} />{item.name[locale]}</label>)}
       </fieldset>
       <fieldset>
         <legend>{t.shop.price}</legend>
@@ -140,12 +137,12 @@ export function ProductListing({ products, categories, locale, initialCategory, 
         <label><span className="sr-only">{t.shop.sort}</span><select value={sort} onChange={(event) => setSort(event.target.value)}><option value="recommended">{t.shop.recommended}</option><option value="low">{t.shop.lowHigh}</option><option value="high">{t.shop.highLow}</option><option value="name">{t.shop.name}</option><option value="newest">{t.shop.newest}</option></select></label>
       </div>
       <div className="listing-grid">
-        <aside className="filter-sidebar">{filters}</aside>
-        <div className="listing-results" data-updating={isFiltering || undefined} aria-busy={isFiltering}>
+        <aside className="filter-sidebar">{renderFilters("sidebar")}</aside>
+        <div className="listing-results">
           {visible.length ? <div className="product-grid listing-products">{visible.map((product) => <ProductCard key={product.id} product={product} locale={locale} />)}</div> : <div className="empty-state compact-empty"><h2>{locale === "de" ? "Keine passenden Produkte" : "No matching products"}</h2><p>{locale === "de" ? "Entfernen Sie einen Filter und versuchen Sie es erneut." : "Remove a filter and try again."}</p></div>}
         </div>
       </div>
-      <div className="drawer-layer" data-state={filterOpen ? "open" : "closed"} inert={!filterOpen} onMouseDown={() => setFilterOpen(false)}><aside className="filter-drawer" data-state={filterOpen ? "open" : "closed"} role="dialog" aria-modal="true" aria-label={t.shop.filter} aria-hidden={!filterOpen} onMouseDown={(event) => event.stopPropagation()}>{filters}</aside></div>
+      <div className="drawer-layer" data-state={filterOpen ? "open" : "closed"} inert={!filterOpen} onMouseDown={() => setFilterOpen(false)}><aside className="filter-drawer" data-state={filterOpen ? "open" : "closed"} role="dialog" aria-modal="true" aria-label={t.shop.filter} aria-hidden={!filterOpen} onMouseDown={(event) => event.stopPropagation()}>{renderFilters("drawer")}</aside></div>
     </div>
   );
 }
