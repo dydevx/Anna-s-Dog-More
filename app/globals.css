@@ -234,6 +234,7 @@ p { text-wrap: pretty; }
 .purchase-actions { display: grid; grid-template-columns: 116px 1fr; gap: .7rem; }
 .quantity-control { height: 48px; display: grid; grid-template-columns: 38px 1fr 38px; align-items: center; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
 .quantity-control button { width: 38px; height: 100%; display: grid; place-items: center; border: 0; background: transparent; color: var(--ink); }
+.quantity-control button:disabled { cursor: not-allowed; color: var(--muted); opacity: .38; }
 .quantity-control span { text-align: center; font-weight: 750; }
 .add-button { min-width: 0; }
 .availability-note { margin-top: .8rem; color: var(--muted); font-size: .78rem; }

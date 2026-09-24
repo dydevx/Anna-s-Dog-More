@@ -4,6 +4,7 @@ import { formatMoney, toMinorUnits } from "@/lib/money";
 import { checkoutSchema } from "@/lib/validation/checkout";
 import { paymentMethodsForCurrency } from "@/lib/payments/methods";
 import { getOptionGroups, resolveVariant } from "@/lib/product-variants";
+import { clampPurchaseQuantity, getPurchasableLimit } from "@/lib/quantity";
 import type { ProductVariant } from "@/types/catalog";
 
 const validCheckout = {
@@ -104,5 +105,13 @@ describe("commerce primitives", () => {
     ];
     const optionKeys = getOptionGroups(variants).map(([key]) => key);
     expect(resolveVariant(variants, variants[0], "size", "M", optionKeys)).toBeUndefined();
+  });
+
+  it("keeps purchase quantity valid at zero-stock and stock-limit boundaries", () => {
+    expect(getPurchasableLimit(0)).toBe(0);
+    expect(clampPurchaseQuantity(2, 0)).toBe(1);
+    expect(clampPurchaseQuantity(0, 5)).toBe(1);
+    expect(clampPurchaseQuantity(6, 5)).toBe(5);
+    expect(clampPurchaseQuantity(3, 5)).toBe(3);
   });
 });

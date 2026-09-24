@@ -6,6 +6,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import type { Locale, Product, ProductVariant } from "@/types/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { getOptionGroups, OPTION_ORDER, resolveVariant } from "@/lib/product-variants";
+import { clampPurchaseQuantity, getPurchasableLimit } from "@/lib/quantity";
 
 const COLOR_SWATCHES: Record<string, string> = {
   amber: "#b97831",
@@ -52,6 +53,9 @@ export function ProductPurchase({
   const { addLine } = useCart();
   const configuredVariant = useMemo(() => product.variants.find((variant) => variant.id === selectedId), [product.variants, selectedId]);
   const selected = configuredVariant?.active && configuredVariant.price !== null ? configuredVariant : undefined;
+  const maxQuantity = getPurchasableLimit(selected?.stockQuantity);
+  const canPurchase = Boolean(selected && maxQuantity > 0);
+  const purchaseQuantity = clampPurchaseQuantity(quantity, maxQuantity);
 
   const optionGroups = useMemo(() => getOptionGroups(product.variants), [product.variants]);
   const optionKeys = optionGroups.map(([key]) => key);
@@ -71,7 +75,7 @@ export function ProductPurchase({
   };
 
   const add = () => {
-    if (!selected || selected.price === null || selected.stockQuantity < quantity) return;
+    if (!selected || selected.price === null || !canPurchase) return;
     const german = getDictionary("de");
     const english = getDictionary("en");
     const germanLabels = Object.fromEntries(Object.keys(selected.options).map((key) => [key, String(german.product[key as keyof typeof german.product] ?? key)]));
@@ -89,8 +93,8 @@ export function ProductPurchase({
       imageUrl: selected.imageUrl ?? product.images[0].url,
       unitPrice: selected.price,
       currency: selected.currency,
-      quantity,
-      maxQuantity: selected.stockQuantity,
+      quantity: purchaseQuantity,
+      maxQuantity,
     });
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
@@ -120,9 +124,10 @@ export function ProductPurchase({
       <span className={selected && selected.stockQuantity > 0 ? "stock-ok" : "stock-off"}>{selected && selected.stockQuantity > 0 ? `${t.product.stock} (${selected.stockQuantity})` : t.product.outOfStock}</span>
     </div>
     <div className="purchase-actions">
-      <div className="quantity-control" aria-label={t.common.quantity}><button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity"><Minus size={16} /></button><span>{quantity}</span><button type="button" onClick={() => setQuantity((value) => Math.min(selected?.stockQuantity ?? 1, value + 1))} aria-label="Increase quantity"><Plus size={16} /></button></div>
-      <button className="button primary-button add-button" type="button" onClick={add} disabled={!selected || selected.stockQuantity < 1}>{added ? <><Check size={18} />{locale === "de" ? "Hinzugefügt" : "Added"}</> : (selected ? t.common.addToCart : t.common.unavailable)}</button>
+      <div className="quantity-control" aria-label={t.common.quantity}><button type="button" onClick={() => setQuantity(clampPurchaseQuantity(purchaseQuantity - 1, maxQuantity))} aria-label={locale === "de" ? "Menge verringern" : "Decrease quantity"} disabled={!canPurchase || purchaseQuantity <= 1}><Minus size={16} /></button><span aria-live="polite">{purchaseQuantity}</span><button type="button" onClick={() => setQuantity(clampPurchaseQuantity(purchaseQuantity + 1, maxQuantity))} aria-label={locale === "de" ? "Menge erhöhen" : "Increase quantity"} disabled={!canPurchase || purchaseQuantity >= maxQuantity}><Plus size={16} /></button></div>
+      <button className="button primary-button add-button" type="button" onClick={add} disabled={!canPurchase}>{added ? <><Check size={18} />{locale === "de" ? "Hinzugefügt" : "Added"}</> : (canPurchase ? t.common.addToCart : t.common.unavailable)}</button>
     </div>
+    {selected && !canPurchase && <p className="availability-note">{locale === "de" ? "Dieser Artikel kann bestellt werden, sobald der Bestand bestätigt wurde." : "This item can be ordered once its stock has been confirmed."}</p>}
     {!selected && <p className="availability-note">{configuredVariant?.price === null ? (locale === "de" ? "Fehlende Quelldaten: Der Variantenpreis muss noch bestätigt werden." : "Missing source data: this variant price still needs confirmation.") : t.product.selectOptions}</p>}
   </div>;
 }
