@@ -12,6 +12,8 @@
     "test:watch": "node ./node_modules/vitest/vitest.mjs",
     "import:catalog": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/import-laboni.ts && node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/sync-laboni-variants.ts",
     "sync:variants": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/sync-laboni-variants.ts",
+    "import:hundebetten": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/import-laboni-hundebetten.ts && node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/sync-laboni-variants.ts",
+    "audit:hundebetten": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/audit-laboni-hundebetten.ts",
     "generate:icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {

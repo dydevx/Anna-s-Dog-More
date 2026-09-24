@@ -88,14 +88,15 @@ async function run() {
     .like("source_url", "https://laboni.design/%");
   if (error) throw error;
 
-  const candidates = (products ?? []).filter((product) => product.source_url && ["classic-hundebett", "prado-design-hundebett", "vogue-design-hundebett", "luna-lounge-set"].some((name) => product.slug.startsWith(name)));
+  const candidates = (products ?? []).filter((product) => product.source_url && ["/hundebetten/", "/sale/", "/lookbook/"].some((path) => product.source_url.includes(path)));
   const report: Array<{ product: string; variants: number; missingPrice: string[]; missingImage: string[]; missingStock: string[] }> = [];
 
   for (const product of candidates) {
     const baseHtml = await sourceHtml(product.source_url);
     const groups = parseGroups(baseHtml);
     if (groups.length === 0) {
-      report.push({ product: product.slug, variants: 0, missingPrice: ["No source configurator"], missingImage: [], missingStock: ["Source quantity unavailable"] });
+      const simple = extract(baseHtml);
+      report.push({ product: product.slug, variants: simple.sku ? 1 : 0, missingPrice: simple.price === null ? [simple.sku || "No source price"] : [], missingImage: simple.images.length === 0 ? [simple.sku || "No source image"] : [], missingStock: simple.sku ? [simple.sku] : ["Source quantity unavailable"] });
       continue;
     }
 
@@ -169,6 +170,6 @@ async function run() {
 }
 
 run().catch((error) => {
-  process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
+  process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : JSON.stringify(error, null, 2)}\n`);
   process.exitCode = 1;
 });
