@@ -9,6 +9,14 @@ export const dynamic = "force-dynamic";
 type AccountOrder = { id: string; order_number: string; order_status: string; grand_total: number; currency: string; created_at: string };
 type SavedAddress = { id: string; label: string | null; first_name: string; last_name: string; street: string; house_number: string; postal_code: string; city: string; country_code: string };
 
+function authErrorMessage(error: string, isDe: boolean) {
+  if (error === "config") return isDe ? "Supabase Auth ist noch nicht konfiguriert." : "Supabase Auth is not configured yet.";
+  if (error === "email-rate-limit") return isDe ? "Zu viele E-Mails wurden angefordert. Bitte versuchen Sie es später erneut." : "Too many emails were requested. Please try again later.";
+  if (error === "email-not-authorized") return isDe ? "Der Standard-E-Mail-Dienst darf nicht an diese Adresse senden. Bitte konfigurieren Sie Custom SMTP." : "The default email service cannot send to this address. Please configure custom SMTP.";
+  if (error === "email-send") return isDe ? "Die E-Mail konnte nicht gesendet werden. Bitte prüfen Sie die SMTP-Einstellungen." : "The email could not be sent. Please check the SMTP settings.";
+  return isDe ? "Anmeldung nicht möglich. Bitte prüfen Sie Ihre Angaben." : "Unable to sign in. Check your details.";
+}
+
 export default async function AccountPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ error?: string; message?: string }> }) {
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (!isLocale(locale)) return null;
@@ -31,7 +39,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
   if (!user) return <div className="page-shell account-shell">
     <header className="page-intro"><h1>{isDe ? "Ihr Konto" : "Your account"}</h1><p>{isDe ? "Bestellungen ansehen und Adressen verwalten. Für den Einkauf ist kein Konto erforderlich." : "View orders and manage addresses. An account is not required to purchase."}</p></header>
-    {query.error && <div className="form-alert" role="alert">{query.error === "config" ? (isDe ? "Supabase Auth ist noch nicht konfiguriert." : "Supabase Auth is not configured yet.") : (isDe ? "Anmeldung nicht möglich. Bitte prüfen Sie Ihre Angaben." : "Unable to sign in. Check your details.")}</div>}
+    {query.error && <div className="form-alert" role="alert">{authErrorMessage(query.error, isDe)}</div>}
     {query.message && <div className="configuration-notice">{isDe ? "Bitte prüfen Sie Ihren E-Mail-Posteingang." : "Please check your email inbox."}</div>}
     <div className="auth-grid">
       <form action={signInAction} className="auth-form"><input type="hidden" name="locale" value={locale} /><h2>{isDe ? "Anmelden" : "Sign in"}</h2><label>E-Mail<input name="email" type="email" required autoComplete="email" /></label><label>{isDe ? "Passwort" : "Password"}<input name="password" type="password" required minLength={8} autoComplete="current-password" /></label><button className="button primary-button" type="submit">{isDe ? "Anmelden" : "Sign in"}</button></form>

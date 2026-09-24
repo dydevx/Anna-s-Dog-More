@@ -6,6 +6,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 import { createUserClient } from "@/lib/supabase/server";
 import { getRequestSiteUrl } from "@/lib/site-url";
+import { getPasswordResetErrorKey } from "@/lib/auth/password-reset";
 
 function localeFrom(formData: FormData) {
   return formData.get("locale") === "en" ? "en" : "de";
@@ -41,11 +42,16 @@ export async function signUpAction(formData: FormData) {
 
 export async function forgotPasswordAction(formData: FormData) {
   const locale = localeFrom(formData);
+  let resetError: string | undefined;
+
   try {
     const supabase = await createUserClient();
     const base = getRequestSiteUrl(await headers());
-    await supabase.auth.resetPasswordForEmail(String(formData.get("email") ?? ""), { redirectTo: `${base}/auth/callback?next=/${locale}/account/reset` });
+    const { error } = await supabase.auth.resetPasswordForEmail(String(formData.get("email") ?? ""), { redirectTo: `${base}/auth/callback?next=/${locale}/account/reset` });
+    resetError = error ? getPasswordResetErrorKey(error.code) : undefined;
   } catch { redirect(`/${locale}/account?error=config`); }
+
+  if (resetError) redirect(`/${locale}/account?error=${resetError}`);
   redirect(`/${locale}/account?message=check-email`);
 }
 

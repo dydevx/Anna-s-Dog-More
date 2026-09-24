@@ -6,6 +6,7 @@ import { paymentMethodsForCurrency } from "@/lib/payments/methods";
 import { getOptionGroups, resolveVariant } from "@/lib/product-variants";
 import { clampPurchaseQuantity, getPurchasableLimit } from "@/lib/quantity";
 import { ADMIN_LOGIN_EMAIL, resolveAdminLogin } from "@/lib/auth/admin-login";
+import { getPasswordResetErrorKey } from "@/lib/auth/password-reset";
 import type { ProductVariant } from "@/types/catalog";
 
 const validCheckout = {
@@ -39,6 +40,12 @@ describe("commerce primitives", () => {
     expect(resolveAdminLogin("Admin")).toBe(ADMIN_LOGIN_EMAIL);
     expect(resolveAdminLogin(" admin ")).toBe(ADMIN_LOGIN_EMAIL);
     expect(resolveAdminLogin("owner@example.com")).toBe("owner@example.com");
+  });
+
+  it("maps password reset delivery errors to actionable messages", () => {
+    expect(getPasswordResetErrorKey("over_email_send_rate_limit")).toBe("email-rate-limit");
+    expect(getPasswordResetErrorKey("email_address_not_authorized")).toBe("email-not-authorized");
+    expect(getPasswordResetErrorKey("unexpected_failure")).toBe("email-send");
   });
 
   it("converts display prices to provider minor units", () => {
