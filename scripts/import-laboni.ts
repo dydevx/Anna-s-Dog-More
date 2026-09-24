@@ -23,6 +23,7 @@ async function run() {
   if (categoryError) throw categoryError;
 
   for (const product of products) {
+    const sourceManagedVariants = product.categorySlug === "polsterbetten";
     const { error: productError } = await supabase.from("products").upsert({
       id: product.id,
       category_id: product.categoryId,
@@ -62,14 +63,18 @@ async function run() {
       capacity: variant.options.capacity ?? null,
       image_url: variant.imageUrl ?? null,
     }));
-    const { error: variantError } = await supabase.from("product_variants").upsert(variants, { onConflict: "id" });
-    if (variantError) throw variantError;
+    if (!sourceManagedVariants) {
+      const { error: variantError } = await supabase.from("product_variants").upsert(variants, { onConflict: "id" });
+      if (variantError) throw variantError;
+    }
 
     const { error: thumbnailCleanupError } = await supabase.from("product_images").delete().eq("product_id", product.id).like("url", "%/thumbnail/%");
     if (thumbnailCleanupError) throw thumbnailCleanupError;
-    const images = product.images.map((item) => ({ product_id: product.id, url: item.url, alt_de: item.alt.de, alt_en: item.alt.en, sort_order: item.sortOrder }));
-    const { error: imageError } = await supabase.from("product_images").upsert(images, { onConflict: "product_id,url" });
-    if (imageError) throw imageError;
+    if (!sourceManagedVariants) {
+      const images = product.images.map((item) => ({ product_id: product.id, url: item.url, alt_de: item.alt.de, alt_en: item.alt.en, sort_order: item.sortOrder }));
+      const { error: imageError } = await supabase.from("product_images").upsert(images, { onConflict: "product_id,url" });
+      if (imageError) throw imageError;
+    }
 
     const attributes = Object.entries(product.attributes).map(([name, value], index) => ({ product_id: product.id, attribute_name: name, value_de: value, value_en: value, sort_order: index }));
     if (attributes.length) {

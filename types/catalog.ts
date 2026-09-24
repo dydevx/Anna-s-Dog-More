@@ -10,6 +10,9 @@ export type ProductImage = {
   url: string;
   alt: LocalizedText;
   sortOrder: number;
+  variantId?: string;
+  color?: string;
+  isPrimary?: boolean;
 };
 
 export type ProductVariant = {
@@ -62,6 +65,8 @@ export type CartLine = {
   productSlug: string;
   variantId: string;
   sku: string;
+  articleNumber: string;
+  options: Record<string, string>;
   name: LocalizedText;
   variantLabel: LocalizedText;
   imageUrl: string;

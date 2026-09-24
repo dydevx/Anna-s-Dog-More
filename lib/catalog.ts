@@ -59,6 +59,13 @@ export const getProducts = cache(async (): Promise<Product[]> => {
       url: String(item.url),
       alt: { de: String(item.alt_de ?? ""), en: String(item.alt_en ?? "") },
       sortOrder: Number(item.sort_order ?? 0),
+      variantId: item.variant_id ? String(item.variant_id) : undefined,
+      color: item.color
+        ? String(item.color)
+        : item.variant_id
+          ? String((row.product_variants ?? []).find((variant: Record<string, unknown>) => String(variant.id) === String(item.variant_id))?.color ?? "") || undefined
+          : undefined,
+      isPrimary: Boolean(item.is_primary),
     })),
     variants: (row.product_variants ?? []).map((item: Record<string, unknown>) => ({
       id: String(item.id),

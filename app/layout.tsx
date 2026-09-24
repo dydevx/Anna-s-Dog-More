@@ -10,7 +10,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: { default: "Anna's Dog & More", template: "%s | Anna's Dog & More" },
   description: "Premium LABONI products for dogs and their people in Zürich.",
-  icons: { icon: "/icon.svg" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

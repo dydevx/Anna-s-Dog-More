@@ -15,7 +15,7 @@ type CartContextValue = {
   clear: () => void;
 };
 
-const STORAGE_KEY = "annas-dog-cart-v2";
+const STORAGE_KEY = "annas-dog-cart-v3";
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {

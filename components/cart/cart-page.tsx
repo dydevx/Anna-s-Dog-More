@@ -17,7 +17,7 @@ export function CartPage({ locale }: { locale: Locale }) {
     <section><h1>{t.cart.title}</h1><div className="cart-lines">
       {cart.lines.map((line) => <article className="cart-line" key={line.id}>
         <Image src={line.imageUrl} alt={line.name[locale]} width={160} height={160} />
-        <div className="cart-line-copy"><Link href={`/${locale}/product/${line.productSlug}`}>{line.name[locale]}</Link><p>{line.variantLabel[locale]}</p><small>SKU {line.sku}</small>
+        <div className="cart-line-copy"><Link href={`/${locale}/product/${line.productSlug}`}>{line.name[locale]}</Link><p>{line.variantLabel[locale]}</p><small>{locale === "de" ? "Art.-Nr." : "Article no."} {line.articleNumber}</small>
           <div className="quantity-control"><button type="button" onClick={() => cart.setQuantity(line.id, line.quantity - 1)} aria-label="Decrease quantity"><Minus size={16} /></button><span>{line.quantity}</span><button type="button" onClick={() => cart.setQuantity(line.id, line.quantity + 1)} aria-label="Increase quantity"><Plus size={16} /></button></div>
         </div>
         <div className="cart-line-price"><strong>{formatMoney(line.unitPrice * line.quantity, line.currency, locale)}</strong><button type="button" onClick={() => cart.removeLine(line.id)}><Trash size={17} />{t.common.remove}</button></div>

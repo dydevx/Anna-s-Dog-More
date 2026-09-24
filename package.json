@@ -10,7 +10,9 @@
     "typecheck": "node ./node_modules/typescript/bin/tsc --noEmit",
     "test": "node ./node_modules/vitest/vitest.mjs run",
     "test:watch": "node ./node_modules/vitest/vitest.mjs",
-    "import:catalog": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/import-laboni.ts"
+    "import:catalog": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/import-laboni.ts && node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/sync-laboni-variants.ts",
+    "sync:variants": "node --env-file=.env.local --import ./node_modules/tsx/dist/loader.mjs scripts/sync-laboni-variants.ts",
+    "generate:icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

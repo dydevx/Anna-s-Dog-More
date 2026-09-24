@@ -3,6 +3,8 @@ import { products } from "@/data/catalog";
 import { formatMoney, toMinorUnits } from "@/lib/money";
 import { checkoutSchema } from "@/lib/validation/checkout";
 import { paymentMethodsForCurrency } from "@/lib/payments/methods";
+import { getOptionGroups, resolveVariant } from "@/lib/product-variants";
+import type { ProductVariant } from "@/types/catalog";
 
 const validCheckout = {
   locale: "de" as const,
@@ -80,5 +82,27 @@ describe("commerce primitives", () => {
   it("offers TWINT only when the order currency is CHF", () => {
     expect(paymentMethodsForCurrency("EUR")).toEqual(["card"]);
     expect(paymentMethodsForCurrency("CHF")).toEqual(["card", "twint"]);
+  });
+
+  it("resolves the exact size and color variant with its own price and SKU", () => {
+    const variants: ProductVariant[] = [
+      { id: "s-rose", sku: "S-ROSE", articleNumber: "S-ROSE", price: 159.9, currency: "CHF", stockQuantity: 2, active: true, options: { size: "S", color: "Rose" } },
+      { id: "m-rose", sku: "M-ROSE", articleNumber: "M-ROSE", price: 199.9, currency: "CHF", stockQuantity: 1, active: true, options: { size: "M", color: "Rose" } },
+      { id: "m-grey", sku: "M-GREY", articleNumber: "M-GREY", price: 209.9, currency: "CHF", stockQuantity: 3, active: true, options: { size: "M", color: "Grey" } },
+    ];
+    const optionKeys = getOptionGroups(variants).map(([key]) => key);
+    const selected = resolveVariant(variants, variants[0], "size", "M", optionKeys);
+    const grey = resolveVariant(variants, selected, "color", "Grey", optionKeys);
+    expect(selected).toMatchObject({ id: "m-rose", price: 199.9, sku: "M-ROSE" });
+    expect(grey).toMatchObject({ id: "m-grey", price: 209.9, sku: "M-GREY" });
+  });
+
+  it("does not silently fall back to a different option combination", () => {
+    const variants: ProductVariant[] = [
+      { id: "s-rose", sku: "S-ROSE", articleNumber: "S-ROSE", price: 159.9, currency: "CHF", stockQuantity: 0, active: true, options: { size: "S", color: "Rose" } },
+      { id: "m-grey", sku: "M-GREY", articleNumber: "M-GREY", price: 209.9, currency: "CHF", stockQuantity: 0, active: true, options: { size: "M", color: "Grey" } },
+    ];
+    const optionKeys = getOptionGroups(variants).map(([key]) => key);
+    expect(resolveVariant(variants, variants[0], "size", "M", optionKeys)).toBeUndefined();
   });
 });
