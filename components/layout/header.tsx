@@ -10,6 +10,23 @@ import type { Locale, Product } from "@/types/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatMoney } from "@/lib/money";
 
+const languages = {
+  de: { flag: "🇩🇪", code: "DE", name: "Deutsch" },
+  en: { flag: "🇬🇧", code: "EN", name: "English" },
+} as const;
+
+function LanguageSwitcher({ locale, pathname, mobile = false }: { locale: Locale; pathname: string; mobile?: boolean }) {
+  return <div className={`language-switcher${mobile ? " drawer-language-switcher" : ""}`} role="group" aria-label={locale === "de" ? "Sprache wählen" : "Choose language"}>
+    {(Object.keys(languages) as Locale[]).map((language) => {
+      const item = languages[language];
+      const href = pathname.replace(/^\/(de|en)(?=\/|$)/, `/${language}`);
+      return <Link key={language} className="language-option" data-active={locale === language} href={href} hrefLang={language} aria-current={locale === language ? "page" : undefined} aria-label={item.name} title={item.name}>
+        <span className="language-flag" aria-hidden="true">{item.flag}</span><span className="language-code">{item.code}</span>
+      </Link>;
+    })}
+  </div>;
+}
+
 export function Header({ locale }: { locale: Locale }) {
   const t = getDictionary(locale);
   const pathname = usePathname();
@@ -21,8 +38,6 @@ export function Header({ locale }: { locale: Locale }) {
   const [settledQuery, setSettledQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const searching = query.trim().length >= 2 && settledQuery !== query;
-  const alternate = locale === "de" ? "en" : "de";
-  const alternatePath = pathname.replace(/^\/(de|en)/, `/${alternate}`);
 
   useEffect(() => {
     if (!searchOpen) return;
@@ -91,7 +106,7 @@ export function Header({ locale }: { locale: Locale }) {
           <div className="header-actions">
             <button className="icon-button desktop-action" type="button" aria-label={t.nav.search} aria-expanded={searchOpen} onClick={() => setSearchOpen(true)}><MagnifyingGlass size={21} /></button>
             <Link className="icon-button desktop-action" href={`/${locale}/account`} aria-label={t.nav.account}><UserCircle size={22} /></Link>
-            <Link className="locale-switch" href={alternatePath} hrefLang={alternate} aria-label={`Switch to ${alternate.toUpperCase()}`}>{locale.toUpperCase()} <span>/</span> {alternate.toUpperCase()}</Link>
+            <LanguageSwitcher locale={locale} pathname={pathname} />
             <Link className="icon-button cart-button" href={`/${locale}/cart`} aria-label={`${t.nav.cart}: ${count}`}>
               <ShoppingBag size={22} /><span className="cart-count" aria-hidden="true">{count}</span>
             </Link>
@@ -105,7 +120,7 @@ export function Header({ locale }: { locale: Locale }) {
           {nav.map(([label, href]) => <Link key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</Link>)}
           <button className="mobile-search-link" type="button" onClick={() => { setMenuOpen(false); setSearchOpen(true); }}><MagnifyingGlass size={19} />{t.nav.search}</button>
           <Link href={`/${locale}/account`} onClick={() => setMenuOpen(false)}>{t.nav.account}</Link>
-          <Link href={alternatePath} onClick={() => setMenuOpen(false)}>{alternate.toUpperCase()}</Link>
+          <LanguageSwitcher locale={locale} pathname={pathname} mobile />
         </nav>
       </div>
 
