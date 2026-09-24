@@ -2,19 +2,21 @@ import { createClient } from "@supabase/supabase-js";
 
 type SourceOption = { id: string; title: string };
 type SourceGroup = { id: string; key: string; label: string; options: SourceOption[] };
-type SourceProduct = { sourceUrl: string; name: string; sku: string; price: number | null; compareAtPrice: number | null; images: string[]; groups: SourceGroup[] };
+type SourceProduct = { sourceUrl: string; listingGroups: string[]; name: string; sku: string; price: number | null; compareAtPrice: number | null; images: string[]; groups: SourceGroup[] };
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!url || !key) throw new Error("Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY in .env.local");
 
 const supabase = createClient(url, key, { auth: { persistSession: false } });
-const listingPages = ["https://laboni.design/hundebetten/", "https://laboni.design/hundebetten/?p=2", "https://laboni.design/hundebetten/?p=3"];
+const listingRoots = ["hundebetten", "decken", "spielen", "napf-rocky", "leinen-halsbaender", "herrchen-frauchen", "sale"];
 
 const categorySeeds = [
   { id: "00000000-0000-4000-8000-000000000009", slug: "orthopaedische-hundebetten", name_de: "Orthopädische Hundebetten", name_en: "Orthopaedic Dog Beds", description_de: "Orthopädische Schlafplätze und druckentlastende Matratzen.", description_en: "Orthopaedic sleeping solutions and pressure-relieving mattresses.", image_url: "https://laboni.design/media/image/4102SX-505.jpg", sort_order: 8, active: true },
   { id: "00000000-0000-4000-8000-000000000010", slug: "hundebett-zubehoer", name_de: "Hundebett-Zubehör", name_en: "Dog Bed Accessories", description_de: "Wechselbezüge, Inletts, Matratzen und Bettgestelle.", description_en: "Replacement covers, inserts, mattresses and bed frames.", image_url: "https://laboni.design/media/image/4102B-505.jpg", sort_order: 9, active: true },
   { id: "00000000-0000-4000-8000-000000000011", slug: "hundekissen", name_de: "Hundekissen", name_en: "Dog Cushions", description_de: "Bodennahe Lounge-Kissen und textile Schlafplätze.", description_en: "Low lounge cushions and textile sleeping places.", image_url: "https://laboni.design/media/image/83200S_8.jpg", sort_order: 10, active: true },
+  { id: "00000000-0000-4000-8000-000000000012", slug: "herrchen-frauchen", name_de: "Herrchen & Frauchen", name_en: "For Dog People", description_de: "Ausgewählte Wohn- und Geschenkideen für Hundefreunde.", description_en: "Selected home and gift ideas for dog lovers.", image_url: "https://laboni.design/media/image/196_1.jpg", sort_order: 11, active: true },
+  { id: "00000000-0000-4000-8000-000000000013", slug: "sale", name_de: "Sale", name_en: "Sale", description_de: "Reduzierte LABONI Einzelstücke und Accessoires.", description_en: "Reduced LABONI pieces and accessories.", image_url: "https://laboni.design/media/image/587_1.jpg", sort_order: 12, active: true },
 ];
 
 function decodeHtml(value: string) {
@@ -60,15 +62,19 @@ function parseMoney(value: string | undefined) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function parseSourceProduct(sourceUrl: string, html: string): SourceProduct {
+function parseSourceProduct(sourceUrl: string, listingGroups: string[], html: string): SourceProduct {
   const name = decodeHtml(html.match(/<h1 class="product--title"[^>]*>([\s\S]*?)<\/h1>/)?.[1] ?? "");
   const sku = decodeHtml(html.match(/<meta property="product:retailer_item_id" content="([^"]+)"/)?.[1] ?? "");
   const rawPrice = html.match(/<meta property="product:price" content="([^"]+)"/)?.[1];
   const price = rawPrice ? Number(rawPrice.replace(",", ".")) : null;
   const discountBlock = html.match(/<div class="product--price price--default price--discount">([\s\S]*?)<\/div>/)?.[1];
   const compareAtPrice = parseMoney(discountBlock?.match(/price--line-through">\s*([^<]+)/)?.[1]);
-  const images = [...new Set([...html.matchAll(/data-img-original="([^"]+)"/g)].map((match) => decodeHtml(match[1])))];
-  return { sourceUrl, name, sku, price: Number.isFinite(price) ? price : null, compareAtPrice, images, groups: parseGroups(html) };
+  const originalImages = [...html.matchAll(/data-img-original="([^"]+)"/g)].map((match) => decodeHtml(match[1]));
+  const fallbackImages = [...html.matchAll(/(?:src|content)="([^"]*\/media\/image\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi)]
+    .map((match) => decodeHtml(match[1]))
+    .filter((image) => !image.includes("laboni-logo") && !image.includes("no-picture"));
+  const images = [...new Set(originalImages.length > 0 ? originalImages : fallbackImages)];
+  return { sourceUrl, listingGroups, name, sku, price: Number.isFinite(price) ? price : null, compareAtPrice, images, groups: parseGroups(html) };
 }
 
 async function fetchHtml(target: string, attempt = 1): Promise<string> {
@@ -92,6 +98,13 @@ async function mapLimit<T, R>(items: T[], limit: number, task: (item: T, index: 
 
 function categorySlug(product: SourceProduct) {
   const name = product.name.toLocaleLowerCase();
+  const firstPath = new URL(product.sourceUrl).pathname.split("/").filter(Boolean)[0];
+  if (firstPath === "decken" || product.listingGroups.includes("decken")) return "decken";
+  if (firstPath === "spielen" || product.listingGroups.includes("spielen")) return "spielen";
+  if (firstPath === "napf-rocky" || firstPath === "naepfe" || product.listingGroups.includes("napf-rocky")) return "rocky-napf";
+  if (firstPath === "leinen-halsbaender" || product.listingGroups.includes("leinen-halsbaender")) return "leinen-halsbaender";
+  if (firstPath === "herrchen-frauchen") return name.includes("fragrance") || name.includes("duft") ? "raumduft" : "herrchen-frauchen";
+  if (firstPath === "sale" && !/(hundebett|bett |matrat|inlett|kissen)/i.test(product.name)) return "sale";
   if (product.sourceUrl.includes("/orthopaedisch/") || name.startsWith("ortho ")) return "orthopaedische-hundebetten";
   if (product.sourceUrl.includes("/zubehoer/") || /^(bezug|inlett|orthomattress|coolplus|mattress cover|bettrahmen)/i.test(product.name)) return "hundebett-zubehoer";
   if (product.sourceUrl.includes("/hundekissen/") || name.includes("luna lounge") || name.includes("hundekissen")) return "hundekissen";
@@ -101,6 +114,11 @@ function categorySlug(product: SourceProduct) {
 
 function originalCopy(name: string, locale: "de" | "en") {
   const lower = name.toLocaleLowerCase();
+  if (lower.includes("decke")) return locale === "de" ? "Komfortable LABONI Decke für Zuhause und unterwegs." : "Comfortable LABONI blanket for home and travel.";
+  if (lower.includes("halsband") || lower.includes("leine")) return locale === "de" ? "Sorgfältig verarbeitetes Accessoire für gemeinsame Spaziergänge." : "Carefully crafted accessory for walks together.";
+  if (lower.includes("spielzeug") || lower.includes("buddy") || lower.includes("ball")) return locale === "de" ? "Robustes LABONI Hundespielzeug für abwechslungsreiche Beschäftigung." : "Durable LABONI dog toy for engaging play.";
+  if (lower.includes("napf") || lower.includes("rocky")) return locale === "de" ? "Formschöner LABONI Hundenapf für den täglichen Gebrauch." : "A refined LABONI dog bowl for everyday use.";
+  if (lower.includes("kunstdruck") || lower.includes("notizblock") || lower.includes("untersetzer") || lower.includes("korb")) return locale === "de" ? "Ausgewähltes LABONI Wohn- oder Geschenkaccessoire für Hundefreunde." : "Selected LABONI home or gift accessory for dog lovers.";
   if (lower.startsWith("ortho ")) return locale === "de" ? "Orthopädisches Hundebett mit druckentlastendem Schlafkomfort." : "Orthopaedic dog bed designed for pressure-relieving sleep comfort.";
   if (lower.startsWith("bezug")) return locale === "de" ? "Passender Wechselbezug für das angegebene LABONI Hundebett." : "Matching replacement cover for the specified LABONI dog bed.";
   if (lower.includes("inlett")) return locale === "de" ? "Austauschbares Inlett für den passenden LABONI Schlafplatz." : "Replaceable insert for the matching LABONI sleeping place.";
@@ -115,13 +133,33 @@ function sourceId(sourceUrl: string) {
 }
 
 async function run() {
-  const listingHtml = await Promise.all(listingPages.map((page) => fetchHtml(page)));
-  const links = new Map<string, string>();
-  listingHtml.forEach((html) => [...html.matchAll(/<a[^>]+href="([^"]+)"[^>]+class="product--title"[^>]*>([\s\S]*?)<\/a>/g)]
-    .forEach((match) => links.set(decodeHtml(match[1]), decodeHtml(match[2]))));
+  const links = new Map<string, Set<string>>();
+  for (const listingGroup of listingRoots) {
+    const groupLinks = new Set<string>();
+    for (let page = 1; page <= 20; page++) {
+      const listingPage = `https://laboni.design/${listingGroup}/${page === 1 ? "" : `?p=${page}`}`;
+      let html: string;
+      try {
+        html = await fetchHtml(listingPage);
+      } catch (error) {
+        if (page > 1 && error instanceof Error && error.message.startsWith("404 ")) break;
+        throw error;
+      }
+      const found = [...html.matchAll(/<a[^>]+href="([^"]+)"[^>]+class="product--title"[^>]*>[\s\S]*?<\/a>/g)].map((match) => decodeHtml(match[1]));
+      const before = groupLinks.size;
+      found.forEach((sourceUrl) => groupLinks.add(sourceUrl));
+      if (found.length === 0 || groupLinks.size === before) break;
+    }
+    groupLinks.forEach((sourceUrl) => {
+      const groups = links.get(sourceUrl) ?? new Set<string>();
+      groups.add(listingGroup);
+      links.set(sourceUrl, groups);
+    });
+    process.stdout.write(`Discovered ${groupLinks.size} products in ${listingGroup}.\n`);
+  }
 
   const sources = await mapLimit([...links.keys()], 6, async (sourceUrl, index) => {
-    const parsed = parseSourceProduct(sourceUrl, await fetchHtml(sourceUrl));
+    const parsed = parseSourceProduct(sourceUrl, [...(links.get(sourceUrl) ?? [])], await fetchHtml(sourceUrl));
     process.stdout.write(`Read ${index + 1}/${links.size}: ${parsed.name || sourceUrl}\n`);
     return parsed;
   });
@@ -133,12 +171,15 @@ async function run() {
   const categoryIds = new Map((categories ?? []).map((category) => [category.slug, category.id]));
 
   const [{ data: existingProducts, error: productsError }, { data: existingVariants, error: variantsError }] = await Promise.all([
-    supabase.from("products").select("id,slug,source_url"),
+    supabase.from("products").select("id,slug,source_url,active"),
     supabase.from("product_variants").select("id,product_id,sku,stock_quantity"),
   ]);
   if (productsError) throw productsError;
   if (variantsError) throw variantsError;
-  const bySource = new Map((existingProducts ?? []).filter((product) => product.source_url).map((product) => [product.source_url, product]));
+  const bySource = new Map((existingProducts ?? [])
+    .filter((product) => product.source_url)
+    .sort((a, b) => Number(a.active) - Number(b.active))
+    .map((product) => [product.source_url, product]));
   const usedSlugs = new Set((existingProducts ?? []).map((product) => product.slug));
   const variantsBySku = new Map((existingVariants ?? []).map((variant) => [variant.sku, variant]));
   const report = { discovered: sources.length, created: [] as string[], updated: [] as string[], aliases: [] as string[], missingPrice: [] as string[], missingSku: [] as string[] };
@@ -194,7 +235,7 @@ async function run() {
       const { data: inserted, error: insertError } = await supabase.from("products").insert(productPayload).select("id").single();
       if (insertError) throw insertError;
       productId = inserted.id;
-      bySource.set(source.sourceUrl, { id: productId, slug, source_url: source.sourceUrl });
+      bySource.set(source.sourceUrl, { id: productId, slug, source_url: source.sourceUrl, active: true });
       report.created.push(slug);
     }
 

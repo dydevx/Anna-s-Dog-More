@@ -27,6 +27,7 @@ function optionKey(label: string) {
   if (normalized.includes("material")) return "material";
   if (normalized.includes("stoff") || normalized.includes("fabric")) return "fabric";
   if (normalized.includes("matrat") || normalized.includes("mattress")) return "mattress";
+  if (normalized.includes("ausfuhr") || normalized.includes("configuration")) return "configuration";
   return normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
@@ -55,17 +56,27 @@ function extract(html: string) {
   const sku = decodeHtml(html.match(/<meta property="product:retailer_item_id" content="([^"]+)"/)?.[1] ?? "");
   const rawPrice = html.match(/<meta property="product:price" content="([^"]+)"/)?.[1];
   const price = rawPrice ? Number(rawPrice.replace(",", ".")) : null;
-  const images = [...new Set([...html.matchAll(/data-img-original="([^"]+)"/g)].map((match) => decodeHtml(match[1])))];
+  const originalImages = [...html.matchAll(/data-img-original="([^"]+)"/g)].map((match) => decodeHtml(match[1]));
+  const fallbackImages = [...html.matchAll(/(?:src|content)="([^"]*\/media\/image\/[^"]+\.(?:jpg|jpeg|png|webp)(?:\?[^"]*)?)"/gi)]
+    .map((match) => decodeHtml(match[1]))
+    .filter((image) => !image.includes("laboni-logo") && !image.includes("no-picture"));
+  const images = [...new Set(originalImages.length > 0 ? originalImages : fallbackImages)];
   const sourceAvailability = html.match(/<meta property="product:availability" content="([^"]+)"/)?.[1] ?? null;
   return { sku, price: Number.isFinite(price) ? price : null, images, sourceAvailability };
 }
 
-async function sourceHtml(sourceUrl: string, combination?: Combination, groups?: SourceGroup[]) {
+async function sourceHtml(sourceUrl: string, combination?: Combination, groups?: SourceGroup[], attempt = 1): Promise<string> {
   const target = new URL(sourceUrl);
   if (combination && groups) groups.forEach((group) => target.searchParams.set(`group[${group.id}]`, combination[group.key].id));
-  const response = await fetch(target, { headers: { "User-Agent": "Anna's Dog & More catalog sync/1.0" } });
-  if (!response.ok) throw new Error(`${response.status} ${target}`);
-  return response.text();
+  try {
+    const response = await fetch(target, { headers: { "User-Agent": "Anna's Dog & More catalog sync/1.0" } });
+    if (response.ok) return response.text();
+    if (attempt >= 4) throw new Error(`${response.status} ${target}`);
+  } catch (error) {
+    if (attempt >= 4) throw new Error(`Failed after ${attempt} attempts: ${target}`, { cause: error });
+  }
+  await new Promise((resolve) => setTimeout(resolve, attempt * 400));
+  return sourceHtml(sourceUrl, combination, groups, attempt + 1);
 }
 
 async function mapLimit<T, R>(items: T[], limit: number, task: (item: T, index: number) => Promise<R>) {
@@ -88,7 +99,7 @@ async function run() {
     .like("source_url", "https://laboni.design/%");
   if (error) throw error;
 
-  const candidates = (products ?? []).filter((product) => product.source_url && ["/hundebetten/", "/sale/", "/lookbook/"].some((path) => product.source_url.includes(path)));
+  const candidates = (products ?? []).filter((product) => product.source_url?.startsWith("https://laboni.design/"));
   const report: Array<{ product: string; variants: number; missingPrice: string[]; missingImage: string[]; missingStock: string[] }> = [];
 
   for (const product of candidates) {
