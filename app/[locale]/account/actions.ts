@@ -2,9 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { createUserClient } from "@/lib/supabase/server";
-import { getSiteUrl } from "@/lib/site-url";
+import { getRequestSiteUrl } from "@/lib/site-url";
 
 function localeFrom(formData: FormData) {
   return formData.get("locale") === "en" ? "en" : "de";
@@ -24,7 +25,15 @@ export async function signUpAction(formData: FormData) {
   const locale = localeFrom(formData);
   try {
     const supabase = await createUserClient();
-    const { error } = await supabase.auth.signUp({ email: String(formData.get("email") ?? ""), password: String(formData.get("password") ?? ""), options: { data: { locale } } });
+    const base = getRequestSiteUrl(await headers());
+    const { error } = await supabase.auth.signUp({
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      options: {
+        data: { locale },
+        emailRedirectTo: `${base}/auth/callback?next=/${locale}/account`,
+      },
+    });
     if (error) redirect(`/${locale}/account?error=signup`);
   } catch { redirect(`/${locale}/account?error=config`); }
   redirect(`/${locale}/account?message=check-email`);
@@ -34,7 +43,7 @@ export async function forgotPasswordAction(formData: FormData) {
   const locale = localeFrom(formData);
   try {
     const supabase = await createUserClient();
-    const base = getSiteUrl();
+    const base = getRequestSiteUrl(await headers());
     await supabase.auth.resetPasswordForEmail(String(formData.get("email") ?? ""), { redirectTo: `${base}/auth/callback?next=/${locale}/account/reset` });
   } catch { redirect(`/${locale}/account?error=config`); }
   redirect(`/${locale}/account?message=check-email`);

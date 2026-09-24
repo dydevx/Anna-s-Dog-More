@@ -117,8 +117,9 @@ Before production, activate an eligible Swiss merchant account, enable the requi
 3. Apply reviewed Supabase migrations and run the catalog importer once against the intended project.
 4. Configure active shipping rules and the first admin account.
 5. Deploy, then set `NEXT_PUBLIC_SITE_URL` to the final HTTPS origin and redeploy.
-6. Register the production Stripe webhook and signing secret.
-7. Add and verify the custom domain in Vercel, update DNS, and make it the primary domain.
-8. Run the checkout/webhook/refund smoke test, test DE/EN canonical and hreflang URLs, and submit `/sitemap.xml` in the relevant search consoles.
+6. In Supabase Authentication URL Configuration, set Site URL to the same HTTPS origin and allow `<origin>/auth/callback` as a Redirect URL.
+7. Register the production Stripe webhook and signing secret.
+8. Add and verify the custom domain in Vercel, update DNS, and make it the primary domain.
+9. Run the checkout/webhook/refund smoke test, test account confirmation/reset links, test DE/EN canonical and hreflang URLs, and submit `/sitemap.xml` in the relevant search consoles.
 
 Do not launch checkout until shipping, tax, legal, email, inventory, currency, and merchant-account decisions above are approved.
