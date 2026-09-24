@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { resolveAdminLogin } from "@/lib/auth/admin-login";
 import { createUserClient } from "@/lib/supabase/server";
 
 export async function adminLoginAction(formData: FormData) {
@@ -8,7 +9,8 @@ export async function adminLoginAction(formData: FormData) {
 
   try {
     const supabase = await createUserClient();
-    const { error } = await supabase.auth.signInWithPassword({ email: String(formData.get("email") ?? ""), password: String(formData.get("password") ?? "") });
+    const email = resolveAdminLogin(String(formData.get("identifier") ?? ""));
+    const { error } = await supabase.auth.signInWithPassword({ email, password: String(formData.get("password") ?? "") });
     loginFailed = Boolean(error);
   } catch { redirect("/admin/login?error=config"); }
 

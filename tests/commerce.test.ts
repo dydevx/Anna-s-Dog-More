@@ -5,6 +5,7 @@ import { checkoutSchema } from "@/lib/validation/checkout";
 import { paymentMethodsForCurrency } from "@/lib/payments/methods";
 import { getOptionGroups, resolveVariant } from "@/lib/product-variants";
 import { clampPurchaseQuantity, getPurchasableLimit } from "@/lib/quantity";
+import { ADMIN_LOGIN_EMAIL, resolveAdminLogin } from "@/lib/auth/admin-login";
 import type { ProductVariant } from "@/types/catalog";
 
 const validCheckout = {
@@ -34,6 +35,12 @@ const validCheckout = {
 };
 
 describe("commerce primitives", () => {
+  it("resolves the admin username without changing email logins", () => {
+    expect(resolveAdminLogin("Admin")).toBe(ADMIN_LOGIN_EMAIL);
+    expect(resolveAdminLogin(" admin ")).toBe(ADMIN_LOGIN_EMAIL);
+    expect(resolveAdminLogin("owner@example.com")).toBe("owner@example.com");
+  });
+
   it("converts display prices to provider minor units", () => {
     expect(toMinorUnits(14.95)).toBe(1495);
     expect(toMinorUnits(44.95)).toBe(4495);
