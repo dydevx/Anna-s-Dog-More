@@ -54,7 +54,7 @@ export const getProducts = cache(async (): Promise<Product[]> => {
     active: row.active,
     sourceUrl: row.source_url ?? "",
     attributes: Object.fromEntries((row.product_attributes ?? []).map((item: Record<string, unknown>) => [String(item.attribute_name), String(item.value_en ?? item.value_de ?? "")])),
-    images: (row.product_images ?? []).map((item: Record<string, unknown>) => ({
+    images: (row.product_images ?? []).toSorted((a: Record<string, unknown>, b: Record<string, unknown>) => Number(a.sort_order ?? 0) - Number(b.sort_order ?? 0)).map((item: Record<string, unknown>) => ({
       id: String(item.id),
       url: String(item.url),
       alt: { de: String(item.alt_de ?? ""), en: String(item.alt_en ?? "") },

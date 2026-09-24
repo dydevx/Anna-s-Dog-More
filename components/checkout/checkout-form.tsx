@@ -24,7 +24,7 @@ export function CheckoutForm({ locale, paymentCancelled }: { locale: Locale; pay
   const [shippingChecked, setShippingChecked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(paymentCancelled ? (locale === "de" ? "Die Zahlung wurde abgebrochen. Ihr Warenkorb bleibt erhalten." : "Payment was cancelled. Your cart is unchanged.") : "");
-  const currency = cart.currency ?? "EUR";
+  const currency = cart.currency ?? "CHF";
   const selectedMethod = methods.find((method) => method.id === methodId);
   const total = cart.subtotal + (selectedMethod?.fee ?? 0);
 

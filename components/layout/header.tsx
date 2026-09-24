@@ -75,6 +75,7 @@ export function Header({ locale }: { locale: Locale }) {
         <nav className="mobile-drawer" aria-label="Mobile navigation" onMouseDown={(event) => event.stopPropagation()}>
           <div className="drawer-heading"><span className="wordmark compact"><span>ANNA&apos;S</span><small>DOG & MORE</small></span><button className="icon-button" type="button" onClick={() => setMenuOpen(false)} aria-label={t.common.close}><X size={22} /></button></div>
           {nav.map(([label, href]) => <Link key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</Link>)}
+          <button className="mobile-search-link" type="button" onClick={() => { setMenuOpen(false); setSearchOpen(true); }}><MagnifyingGlass size={19} />{t.nav.search}</button>
           <Link href={`/${locale}/account`} onClick={() => setMenuOpen(false)}>{t.nav.account}</Link>
           <Link href={alternatePath}>{alternate.toUpperCase()}</Link>
         </nav>

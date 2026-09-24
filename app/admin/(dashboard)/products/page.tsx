@@ -31,7 +31,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         <label>Kategorie<select name="category_id" required defaultValue=""><option value="" disabled>Bitte wählen</option>{(categories ?? []).map((category) => <option key={category.id} value={category.id}>{category.name_de}</option>)}</select></label>
         <label>Produkttyp<select name="product_type" defaultValue="simple"><option value="simple">Einfach</option><option value="configurable">Konfigurierbar</option><option value="bundle">Set / Bundle</option></select></label>
         <label>Basispreis<input name="base_price" type="number" min="0" step="0.01" required /></label>
-        <label>Währung<input name="currency" maxLength={3} defaultValue="EUR" required /></label>
+        <label>Währung<input name="currency" maxLength={3} defaultValue="CHF" required /></label>
         <button className="button primary-button" type="submit">Archiviertes Produkt anlegen</button>
       </form>
     </section>

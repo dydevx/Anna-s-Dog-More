@@ -37,7 +37,7 @@ describe("commerce primitives", () => {
   });
 
   it("renders currency from data instead of a hard-coded symbol", () => {
-    expect(formatMoney(14.95, "EUR", "de")).toContain("14.95");
+    expect(formatMoney(14.95, "CHF", "de")).toContain("CHF");
     expect(formatMoney(14.95, "CHF", "en")).toContain("CHF");
   });
 
@@ -69,9 +69,12 @@ describe("commerce primitives", () => {
     expect(set?.bundleItems?.map((item) => item.childSku)).toEqual(["10600", "11710", "12000"]);
   });
 
-  it("keeps unknown variant prices unavailable instead of inventing them", () => {
-    const bed = products.find((product) => product.slug === "classic-hundebett-teddy");
-    expect(bed?.variants.every((variant) => variant.price === null && !variant.active)).toBe(true);
+  it("imports the requested dog bed collection without changing numeric prices", () => {
+    const beds = products.filter((product) => product.categorySlug === "polsterbetten");
+    const teddy = beds.find((product) => product.slug === "classic-hundebett-teddy");
+    expect(beds).toHaveLength(18);
+    expect(teddy).toMatchObject({ basePrice: 159.9, currency: "CHF" });
+    expect(teddy?.variants[0]).toMatchObject({ sku: "4101S-505", price: 159.9, currency: "CHF", stockQuantity: 0 });
   });
 
   it("offers TWINT only when the order currency is CHF", () => {

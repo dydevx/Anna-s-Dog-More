@@ -65,6 +65,8 @@ async function run() {
     const { error: variantError } = await supabase.from("product_variants").upsert(variants, { onConflict: "id" });
     if (variantError) throw variantError;
 
+    const { error: thumbnailCleanupError } = await supabase.from("product_images").delete().eq("product_id", product.id).like("url", "%/thumbnail/%");
+    if (thumbnailCleanupError) throw thumbnailCleanupError;
     const images = product.images.map((item) => ({ product_id: product.id, url: item.url, alt_de: item.alt.de, alt_en: item.alt.en, sort_order: item.sortOrder }));
     const { error: imageError } = await supabase.from("product_images").upsert(images, { onConflict: "product_id,url" });
     if (imageError) throw imageError;
@@ -81,6 +83,12 @@ async function run() {
       if (bundleError) throw bundleError;
     }
   }
+  const { error: productCurrencyError } = await supabase.from("products").update({ currency: "CHF" }).neq("currency", "CHF");
+  if (productCurrencyError) throw productCurrencyError;
+  const { error: variantCurrencyError } = await supabase.from("product_variants").update({ currency: "CHF" }).neq("currency", "CHF");
+  if (variantCurrencyError) throw variantCurrencyError;
+  const { error: shippingCurrencyError } = await supabase.from("shipping_rates").update({ currency: "CHF" }).neq("currency", "CHF");
+  if (shippingCurrencyError) throw shippingCurrencyError;
   process.stdout.write(`Imported ${categories.length} categories and ${products.length} products.\n`);
 }
 

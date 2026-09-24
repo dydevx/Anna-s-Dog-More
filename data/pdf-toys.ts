@@ -14,12 +14,12 @@ type PdfToyRow = {
 };
 
 const CATEGORY_ID = "00000000-0000-4000-8000-000000000001";
-const IMAGE_BASE = "https://laboni.design/media/image/thumbnail";
+const IMAGE_BASE = "https://laboni.design/media/image";
 const SITE_BASE = "https://laboni.design";
 
 // Prices, article numbers, colours and sizes are transcribed from the supplied
 // LABONI UVP/RRP scans (printed pages 4-7). Product images are the matching
-// 600x600 LABONI assets and were checked against the PDF illustrations.
+// full-resolution LABONI assets and were checked against the PDF illustrations.
 const PDF_TOYS: PdfToyRow[] = [
   { sku: "10700", slug: "emma-ente", nameDe: "Emma Ente", nameEn: "Emma Duck", color: "Yellow", size: "16 cm", price: 14.95, image: "58Bq59XsBpGNYcz", source: "/spielen/182/emma-ente-kult-spielzeug-fuer-hunde" },
   { sku: "11300", slug: "franz-pferdinand", nameDe: "Franz Pferdinand", nameEn: "Franz Horse Ferdinand", color: "Brown", size: "23 cm", price: 16.95, image: "11300", source: "/spielen/186/franz-pferdinand-kult-spielzeug-fuer-hunde" },
@@ -87,11 +87,11 @@ export const pdfToyProducts: Product[] = PDF_TOYS.map((row, index) => {
     ? { configuration: row.size }
     : { color: row.color, size: row.size };
   const descriptionDe = isBundle
-    ? `${row.nameDe} kombiniert ${row.bundle!.length} LABONI Baumwollspielzeuge. Set und UVP wurden anhand der bereitgestellten LABONI Preisliste geprüft.`
-    : `${row.nameDe} ist ein handgeknüpftes LABONI Hundespielzeug aus reiner Baumwolle. Artikelnummer, Grösse, Farbe und UVP wurden anhand der bereitgestellten LABONI Preisliste geprüft.`;
+    ? `${row.nameDe} kombiniert ${row.bundle!.length} handgeknüpfte LABONI Baumwollspielzeuge für abwechslungsreiche Kau-, Wurf- und Apportierspiele.`
+    : `${row.nameDe} ist ein handgeknüpftes LABONI Hundespielzeug aus reiner Baumwolle für Kau-, Wurf- und Apportierspiele.`;
   const descriptionEn = isBundle
-    ? `${row.nameEn} combines ${row.bundle!.length} LABONI cotton toys. The set contents and RRP were verified against the supplied LABONI price list.`
-    : `${row.nameEn} is a hand-knotted LABONI dog toy made from pure cotton. Article number, size, colour and RRP were verified against the supplied LABONI price list.`;
+    ? `${row.nameEn} combines ${row.bundle!.length} hand-knotted LABONI cotton toys for varied chewing, throwing and retrieving games.`
+    : `${row.nameEn} is a hand-knotted LABONI dog toy made from pure cotton for chewing, throwing and retrieving games.`;
 
   return {
     id: stableUuid("31", index),
@@ -106,7 +106,7 @@ export const pdfToyProducts: Product[] = PDF_TOYS.map((row, index) => {
     description: { de: descriptionDe, en: descriptionEn },
     productType: isBundle ? "bundle" : "simple",
     basePrice: row.price,
-    currency: "EUR",
+    currency: "CHF",
     featured: index < 8,
     active: true,
     sourceUrl: `${SITE_BASE}${row.source}`,
@@ -114,11 +114,10 @@ export const pdfToyProducts: Product[] = PDF_TOYS.map((row, index) => {
       material: "100% cotton",
       size: row.size,
       color: row.color,
-      source: "LABONI UVP/RRP PDF, pages 4-7",
     },
     images: [{
       id: `pdf-toy-${row.sku}`,
-      url: `${IMAGE_BASE}/${row.image}_600x600.jpg`,
+      url: `${IMAGE_BASE}/${row.image}.jpg`,
       alt: { de: `${row.nameDe} von LABONI`, en: `${row.nameEn} by LABONI` },
       sortOrder: 0,
     }],
@@ -127,7 +126,7 @@ export const pdfToyProducts: Product[] = PDF_TOYS.map((row, index) => {
       sku: row.sku,
       articleNumber: row.sku,
       price: row.price,
-      currency: "EUR",
+      currency: "CHF",
       stockQuantity: 0,
       active: true,
       options: variantOptions,

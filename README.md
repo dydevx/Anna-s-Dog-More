@@ -82,11 +82,11 @@ Optional Upstash-compatible `RATE_LIMIT_REDIS_URL` and `RATE_LIMIT_REDIS_TOKEN` 
 
 No shipping price is invented. In `/admin/shipping`, create a zone, add ISO country codes, a localized method, currency, fee, optional free-shipping threshold, and delivery estimate. Leave a rule inactive until the merchant approves it. Checkout stays unavailable for a country/currency with no active matching rule.
 
-The initial data uses confirmed LABONI EUR pricing. Do not switch to CHF or enable TWINT until the owner supplies an approved CHF price list. Currency is stored per variant and order, and is rendered with `Intl.NumberFormat`.
+The storefront uses CHF as its single selling currency. The original numeric catalogue values are preserved without exchange-rate conversion, while currency is stored per variant and order and rendered with `Intl.NumberFormat`.
 
 ## Stripe sandbox and production
 
-The Stripe adapter supports cards for current EUR products. TWINT is offered automatically only for CHF orders because the payment method requires CHF. No card number or CVV reaches this application.
+The Stripe adapter supports cards and offers TWINT for CHF orders. No card number or CVV reaches this application.
 
 For local testing:
 
