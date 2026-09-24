@@ -11,10 +11,8 @@ export function Footer({ locale }: { locale: Locale }) {
     <div className="footer-frame">
       <div className="footer-lead">
         <Link className="wordmark footer-mark" href={`/${locale}`} aria-label={`Anna's Dog & More ${isDe ? "Startseite" : "home"}`}><span>ANNA&apos;S</span><small>DOG & MORE</small></Link>
-        <div className="footer-statement">
-          <h2>{isDe ? "Ausgewählte Produkte für ein gutes Leben mit Hund." : "Selected products for a good life with dogs."}</h2>
-          <Link className="footer-primary-link" href={`/${locale}/contact`}>{isDe ? "Kontakt & Beratung" : "Contact & advice"}<ArrowUpRight size={18} weight="bold" aria-hidden="true" /></Link>
-        </div>
+        <h2 className="footer-statement">{isDe ? "Ausgewählte Produkte für ein gutes Leben mit Hund." : "Selected products for a good life with dogs."}</h2>
+        <Link className="footer-primary-link" href={`/${locale}/contact`}>{isDe ? "Kontakt & Beratung" : "Contact & advice"}<ArrowUpRight size={18} weight="bold" aria-hidden="true" /></Link>
       </div>
 
       <div className="footer-directory">
