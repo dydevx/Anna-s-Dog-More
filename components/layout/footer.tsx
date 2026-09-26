@@ -17,7 +17,7 @@ export function Footer({ locale }: { locale: Locale }) {
 
       <div className="footer-directory">
         <nav className="footer-columns" aria-label={isDe ? "Fußzeilennavigation" : "Footer navigation"}>
-          <div className="footer-link-group"><h2>Shop</h2><Link href={`/${locale}/shop`}>Shop</Link><Link href={`/${locale}/shop#categories`}>{isDe ? "Kategorien" : "Categories"}</Link><Link href={`/${locale}/shop?sort=newest`}>{isDe ? "Neuheiten" : "New arrivals"}</Link><Link href={`/${locale}/shop?featured=true`}>Bestseller</Link></div>
+          <div className="footer-link-group"><h2>Shop</h2><Link href={`/${locale}/shop`}>Shop</Link><Link href={`/${locale}/shop/categories`}>{isDe ? "Kategorien" : "Categories"}</Link><Link href={`/${locale}/shop?sort=newest`}>{isDe ? "Neuheiten" : "New arrivals"}</Link><Link href={`/${locale}/shop?featured=true`}>Bestseller</Link></div>
           <div className="footer-link-group"><h2>Service</h2><Link href={`/${locale}/contact`}>{isDe ? "Kontakt" : "Contact"}</Link><Link href={`/${locale}/legal/shipping`}>{isDe ? "Versand" : "Shipping"}</Link><Link href={`/${locale}/legal/returns`}>{isDe ? "Rückgabe" : "Returns"}</Link><Link href={`/${locale}/legal/payment`}>{isDe ? "Zahlungsarten" : "Payment methods"}</Link></div>
           <div className="footer-link-group"><h2>{isDe ? "Rechtliches" : "Legal"}</h2><Link href={`/${locale}/legal/imprint`}>Impressum</Link><Link href={`/${locale}/legal/privacy`}>{isDe ? "Datenschutz" : "Privacy"}</Link><Link href={`/${locale}/legal/terms`}>AGB</Link></div>
         </nav>

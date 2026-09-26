@@ -86,7 +86,7 @@ export function Header({ locale }: { locale: Locale }) {
   const nav = [
     [t.nav.home, `/${locale}`],
     [t.nav.shop, `/${locale}/shop`],
-    [t.nav.categories, `/${locale}/shop#categories`],
+    [t.nav.categories, `/${locale}/shop/categories`],
     [t.nav.about, `/${locale}/about`],
     [t.nav.contact, `/${locale}/contact`],
   ];

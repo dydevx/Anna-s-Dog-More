@@ -13,5 +13,5 @@ export default async function ShopPage({ params, searchParams }: { params: Promi
   if (!isLocale(rawLocale)) return null;
   const t = getDictionary(rawLocale);
   const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-  return <div className="page-shell"><header className="page-intro" id="categories"><nav aria-label="Breadcrumb"><Link href={`/${rawLocale}`}>{t.nav.home}</Link><span>/</span><span>{t.nav.shop}</span></nav><h1>{t.shop.title}</h1><p>{t.shop.intro}</p></header><ProductListing products={products} categories={categories} locale={rawLocale} initialSort={query.sort} featuredOnly={query.featured === "true"} /></div>;
+  return <div className="page-shell"><header className="page-intro"><nav aria-label="Breadcrumb"><Link href={`/${rawLocale}`}>{t.nav.home}</Link><span>/</span><span>{t.nav.shop}</span></nav><h1>{t.shop.title}</h1><p>{t.shop.intro}</p></header><ProductListing products={products} categories={categories} locale={rawLocale} initialSort={query.sort} featuredOnly={query.featured === "true"} /></div>;
 }

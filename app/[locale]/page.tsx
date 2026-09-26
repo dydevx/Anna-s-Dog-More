@@ -74,7 +74,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </figure>
     </section>
 
-    <section className="section category-section" id="categories"><div className="section-heading"><h2>{t.home.categories}</h2><Link className="text-link" href={`/${locale}/shop`}>{locale === "de" ? "Alle Kategorien" : "All categories"}<ArrowRight size={17} /></Link></div><div className="category-grid">
+    <section className="section category-section" id="categories"><div className="section-heading"><h2>{t.home.categories}</h2><Link className="text-link" href={`/${locale}/shop/categories`}>{locale === "de" ? "Alle Kategorien" : "All categories"}<ArrowRight size={17} /></Link></div><div className="category-grid">
       {homeCategories.map(({ category, image, alt }, index) => <Link key={category.id} className={`category-tile category-${index + 1}`} href={`/${locale}/shop/${category.slug}`}><Image src={image} alt={alt} fill sizes="(max-width: 768px) 100vw, 50vw" /><span><strong>{category.name[locale]}</strong><small>{category.description[locale]}</small></span></Link>)}
     </div></section>
 

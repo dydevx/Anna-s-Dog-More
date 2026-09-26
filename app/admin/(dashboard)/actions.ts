@@ -71,14 +71,32 @@ export async function updateCategoryAction(formData: FormData) {
 export async function updateVariantStockAction(formData: FormData) {
   await requireAdmin();
   const parsed = z.object({ id: z.uuid(), productId: z.uuid(), stock: z.coerce.number().int().nonnegative(), active: z.boolean() }).safeParse({ id: formData.get("id"), productId: formData.get("productId"), stock: formData.get("stock"), active: formData.get("active") === "on" });
-  if (!parsed.success) redirect(`/admin/products/${formData.get("productId")}?error=variant`);
+  if (!parsed.success) redirect(`/admin/products/${formData.get("productId")}?error=stock`);
   const admin = createAdminClient();
-  const { data: before } = await admin.from("product_variants").select("stock_quantity").eq("id", parsed.data.id).single();
-  const { error } = await admin.from("product_variants").update({ stock_quantity: parsed.data.stock, active: parsed.data.active }).eq("id", parsed.data.id);
-  if (error) redirect(`/admin/products/${parsed.data.productId}?error=variant`);
-  const delta = parsed.data.stock - Number(before?.stock_quantity ?? 0);
+  const { data: before, error: readError } = await admin
+    .from("product_variants")
+    .select("stock_quantity,product_id")
+    .eq("id", parsed.data.id)
+    .eq("product_id", parsed.data.productId)
+    .single();
+  if (readError || !before) redirect(`/admin/products/${parsed.data.productId}?error=stock`);
+
+  const { data: updated, error: updateError } = await admin
+    .from("product_variants")
+    .update({ stock_quantity: parsed.data.stock, active: parsed.data.active })
+    .eq("id", parsed.data.id)
+    .eq("product_id", parsed.data.productId)
+    .select("id")
+    .single();
+  if (updateError || !updated) redirect(`/admin/products/${parsed.data.productId}?error=stock`);
+
+  const delta = parsed.data.stock - Number(before.stock_quantity);
   if (delta) await admin.from("inventory_movements").insert({ variant_id: parsed.data.id, type: "adjustment", quantity: delta, reference: "admin-update" });
-  revalidatePath(`/admin/products/${parsed.data.productId}`); revalidatePath("/admin");
+  revalidatePath(`/admin/products/${parsed.data.productId}`);
+  revalidatePath("/admin/products");
+  revalidatePath("/admin");
+  revalidatePath("/[locale]", "layout");
+  redirect(`/admin/products/${parsed.data.productId}?saved=stock`);
 }
 
 export async function updateOrderAction(formData: FormData) {

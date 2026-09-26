@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addProductImageAction, addVariantAction, updateProductAction, updateVariantStockAction } from "../../actions";
 import { ProductImageUpload } from "@/components/admin/product-image-upload";
+import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminStatus } from "@/components/admin/admin-status";
 
@@ -20,8 +21,8 @@ export default async function AdminProductEditor({ params, searchParams }: { par
   return <>
     <Link className="admin-back-link" href="/admin/products"><ArrowLeft size={16} aria-hidden="true" /> Zurück zur Produktliste</Link>
     <header className="admin-page-heading admin-detail-heading"><div><p>Produkt bearbeiten</p><h1>{product.name_de}</h1><AdminStatus status={product.active ? "active" : "archived"} /></div></header>
-    {(query.saved || query.created) && <div className="admin-success">{query.created ? "Produkt archiviert angelegt. Ergänzen Sie jetzt Inhalt, Bild und Variante." : "Änderungen gespeichert."}</div>}
-    {query.error && <div className="form-alert">Änderungen konnten nicht gespeichert werden ({query.error}).</div>}
+    {(query.saved || query.created) && <div className="admin-success" role="status">{query.created ? "Produkt archiviert angelegt. Ergänzen Sie jetzt Inhalt, Bild und Variante." : query.saved === "stock" ? "Bestand wurde aktualisiert." : "Änderungen gespeichert."}</div>}
+    {query.error && <div className="form-alert" role="alert">{query.error === "stock" ? "Bestand konnte nicht aktualisiert werden. Bitte prüfen Sie die Eingabe und versuchen Sie es erneut." : `Änderungen konnten nicht gespeichert werden (${query.error}).`}</div>}
     <form action={updateProductAction} className="admin-editor">
       <input type="hidden" name="id" value={product.id} />
       <section>
@@ -62,9 +63,9 @@ export default async function AdminProductEditor({ params, searchParams }: { par
       <div className="variant-admin-list">{(product.product_variants ?? []).map((variant: { id: string; sku: string; stock_quantity: number; active: boolean; size?: string; color?: string; fabric?: string; mattress_type?: string; configuration?: string }) => <form action={updateVariantStockAction} key={variant.id}>
         <input type="hidden" name="id" value={variant.id} /><input type="hidden" name="productId" value={product.id} />
         <div><strong>{variant.sku}</strong><small>{[variant.size, variant.color, variant.fabric, variant.mattress_type, variant.configuration].filter(Boolean).join(" / ")}</small></div>
-        <label>Bestand<input name="stock" type="number" min="0" defaultValue={variant.stock_quantity} /></label>
+        <label>Bestand<input name="stock" type="number" min="0" step="1" inputMode="numeric" defaultValue={variant.stock_quantity} required /></label>
         <label className="admin-check"><input name="active" type="checkbox" defaultChecked={variant.active} />Bestellbar</label>
-        <button className="button secondary-button" type="submit">Aktualisieren</button>
+        <AdminSubmitButton className="button secondary-button" idleLabel="Bestand speichern" pendingLabel="Wird gespeichert..." />
       </form>)}</div>
       <div className="admin-panel">
         <h2>Exakte Variante anlegen</h2>
