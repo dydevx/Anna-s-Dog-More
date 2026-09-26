@@ -2,6 +2,7 @@ import { cache } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { categories as fallbackCategories, products as fallbackProducts } from "@/data/catalog";
 import type { Category, Product } from "@/types/catalog";
+import { isProductStorefrontReady } from "@/lib/catalog-readiness";
 
 function publicClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,14 +33,14 @@ export const getCategories = cache(async (): Promise<Category[]> => {
 
 export const getProducts = cache(async (): Promise<Product[]> => {
   const client = publicClient();
-  if (!client) return fallbackAllowed() ? fallbackProducts : [];
+  if (!client) return fallbackAllowed() ? fallbackProducts.filter(isProductStorefrontReady) : [];
   const { data, error } = await client
     .from("products")
     .select("*, categories(slug), product_images(*), product_variants(*), product_attributes(*)")
     .eq("active", true)
     .order("created_at", { ascending: false });
   if (error) throw new Error(`Unable to load products: ${error.message}`);
-  return data.map((row) => ({
+  const products = data.map((row) => ({
     id: row.id,
     categoryId: row.category_id,
     categorySlug: row.categories?.slug ?? "shop",
@@ -84,6 +85,8 @@ export const getProducts = cache(async (): Promise<Product[]> => {
       imageUrl: item.image_url ? String(item.image_url) : undefined,
     })),
   })) as Product[];
+
+  return products.filter(isProductStorefrontReady);
 });
 
 export async function getProductBySlug(slug: string) {

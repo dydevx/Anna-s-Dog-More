@@ -10,7 +10,20 @@ export async function updateProductAction(formData: FormData) {
   await requireAdmin();
   const parsed = z.object({ id: z.uuid(), category_id: z.uuid(), name_de: z.string().min(1), name_en: z.string().min(1), short_description_de: z.string().max(300), short_description_en: z.string().max(300), description_de: z.string().max(6000), description_en: z.string().max(6000), base_price: z.coerce.number().nonnegative(), currency: z.string().length(3), active: z.boolean(), featured: z.boolean() }).safeParse({ id: formData.get("id"), category_id: formData.get("category_id"), name_de: formData.get("name_de"), name_en: formData.get("name_en"), short_description_de: formData.get("short_description_de"), short_description_en: formData.get("short_description_en"), description_de: formData.get("description_de"), description_en: formData.get("description_en"), base_price: formData.get("base_price"), currency: String(formData.get("currency") ?? "").toUpperCase(), active: formData.get("active") === "on", featured: formData.get("featured") === "on" });
   if (!parsed.success) redirect(`/admin/products/${formData.get("id")}?error=invalid`);
-  const { error } = await createAdminClient().from("products").update(parsed.data).eq("id", parsed.data.id);
+  const admin = createAdminClient();
+
+  if (parsed.data.active) {
+    const [{ count: imageCount, error: imageError }, { count: variantCount, error: variantError }] = await Promise.all([
+      admin.from("product_images").select("id", { count: "exact", head: true }).eq("product_id", parsed.data.id),
+      admin.from("product_variants").select("id", { count: "exact", head: true }).eq("product_id", parsed.data.id).eq("active", true).not("price", "is", null),
+    ]);
+
+    if (imageError || variantError) redirect(`/admin/products/${parsed.data.id}?error=readiness`);
+    if (!imageCount) redirect(`/admin/products/${parsed.data.id}?error=image-required`);
+    if (!variantCount) redirect(`/admin/products/${parsed.data.id}?error=variant-required`);
+  }
+
+  const { error } = await admin.from("products").update(parsed.data).eq("id", parsed.data.id);
   if (error) redirect(`/admin/products/${parsed.data.id}?error=save`);
   revalidatePath("/admin/products"); revalidatePath("/de/shop"); revalidatePath("/en/shop");
   redirect(`/admin/products/${parsed.data.id}?saved=1`);

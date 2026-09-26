@@ -7,6 +7,7 @@ import { getOptionGroups, resolveVariant } from "@/lib/product-variants";
 import { clampPurchaseQuantity, getPurchasableLimit } from "@/lib/quantity";
 import { ADMIN_LOGIN_EMAIL, resolveAdminLogin } from "@/lib/auth/admin-login";
 import { getPasswordResetErrorKey } from "@/lib/auth/password-reset";
+import { isProductStorefrontReady } from "@/lib/catalog-readiness";
 import type { ProductVariant } from "@/types/catalog";
 
 const validCheckout = {
@@ -127,5 +128,13 @@ describe("commerce primitives", () => {
     expect(clampPurchaseQuantity(0, 5)).toBe(1);
     expect(clampPurchaseQuantity(6, 5)).toBe(5);
     expect(clampPurchaseQuantity(3, 5)).toBe(3);
+  });
+
+  it("keeps incomplete products out of the public storefront", () => {
+    const complete = products.find((product) => product.images.length > 0 && product.variants.some((variant) => variant.active && variant.price !== null));
+    expect(complete).toBeDefined();
+    expect(isProductStorefrontReady(complete!)).toBe(true);
+    expect(isProductStorefrontReady({ images: [], variants: complete!.variants })).toBe(false);
+    expect(isProductStorefrontReady({ images: complete!.images, variants: [] })).toBe(false);
   });
 });

@@ -12,7 +12,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale, slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product || !isLocale(locale)) return {};
-  return { title: product.name[locale], description: product.shortDescription[locale], alternates: { canonical: `/${locale}/product/${slug}`, languages: { de: `/de/product/${slug}`, en: `/en/product/${slug}` } }, openGraph: { images: [product.images[0].url] } };
+  const primaryImage = product.images[0];
+  return { title: product.name[locale], description: product.shortDescription[locale], alternates: { canonical: `/${locale}/product/${slug}`, languages: { de: `/de/product/${slug}`, en: `/en/product/${slug}` } }, openGraph: primaryImage ? { images: [primaryImage.url] } : undefined };
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {

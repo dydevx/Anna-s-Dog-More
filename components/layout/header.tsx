@@ -130,7 +130,9 @@ export function Header({ locale }: { locale: Locale }) {
           <div className="search-results" aria-live="polite" aria-busy={searching}>
             {searching && <div className="search-loading" aria-label={locale === "de" ? "Suche läuft" : "Searching"}>{[0, 1, 2].map((item) => <span key={item} />)}</div>}
             {!searching && results.map((product) => <Link key={product.id} href={`/${locale}/product/${product.slug}`} onClick={() => setSearchOpen(false)}>
-              <Image src={product.images[0].url} alt={product.images[0].alt[locale]} width={72} height={72} />
+              {product.images[0]
+                ? <Image src={product.images[0].url} alt={product.images[0].alt[locale]} width={72} height={72} />
+                : <span className="search-image-placeholder" aria-hidden="true" />}
               <span><strong>{product.name[locale]}</strong><small>{formatMoney(product.basePrice, product.currency, locale)}</small></span>
             </Link>)}
             {!searching && query.trim().length >= 2 && results.length === 0 && <p>{locale === "de" ? "Keine passenden Produkte gefunden." : "No matching products found."}</p>}

@@ -53,8 +53,9 @@ export function ProductPurchase({
   const { addLine } = useCart();
   const configuredVariant = useMemo(() => product.variants.find((variant) => variant.id === selectedId), [product.variants, selectedId]);
   const selected = configuredVariant?.active && configuredVariant.price !== null ? configuredVariant : undefined;
+  const cartImageUrl = selected?.imageUrl ?? product.images[0]?.url;
   const maxQuantity = getPurchasableLimit(selected?.stockQuantity);
-  const canPurchase = Boolean(selected && maxQuantity > 0);
+  const canPurchase = Boolean(selected && cartImageUrl && maxQuantity > 0);
   const purchaseQuantity = clampPurchaseQuantity(quantity, maxQuantity);
 
   const optionGroups = useMemo(() => getOptionGroups(product.variants), [product.variants]);
@@ -90,7 +91,7 @@ export function ProductPurchase({
       options: selected.options,
       name: product.name,
       variantLabel: { de: variantLabel(selected, germanLabels), en: variantLabel(selected, englishLabels) },
-      imageUrl: selected.imageUrl ?? product.images[0].url,
+      imageUrl: cartImageUrl as string,
       unitPrice: selected.price,
       currency: selected.currency,
       quantity: purchaseQuantity,

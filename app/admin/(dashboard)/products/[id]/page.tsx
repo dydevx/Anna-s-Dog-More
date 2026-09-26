@@ -8,6 +8,13 @@ import { AdminSubmitButton } from "@/components/admin/admin-submit-button";
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminStatus } from "@/components/admin/admin-status";
 
+const productErrorMessages: Record<string, string> = {
+  "image-required": "Das Produkt braucht mindestens ein Bild, bevor es im Shop sichtbar werden kann.",
+  "variant-required": "Das Produkt braucht mindestens eine aktive Variante mit Preis, bevor es im Shop sichtbar werden kann.",
+  readiness: "Die Produktdaten konnten nicht geprüft werden. Bitte versuchen Sie es erneut.",
+  stock: "Bestand konnte nicht aktualisiert werden. Bitte prüfen Sie die Eingabe und versuchen Sie es erneut.",
+};
+
 export default async function AdminProductEditor({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string; created?: string }> }) {
   await requireAdmin();
   const [{ id }, query] = await Promise.all([params, searchParams]);
@@ -22,7 +29,7 @@ export default async function AdminProductEditor({ params, searchParams }: { par
     <Link className="admin-back-link" href="/admin/products"><ArrowLeft size={16} aria-hidden="true" /> Zurück zur Produktliste</Link>
     <header className="admin-page-heading admin-detail-heading"><div><p>Produkt bearbeiten</p><h1>{product.name_de}</h1><AdminStatus status={product.active ? "active" : "archived"} /></div></header>
     {(query.saved || query.created) && <div className="admin-success" role="status">{query.created ? "Produkt archiviert angelegt. Ergänzen Sie jetzt Inhalt, Bild und Variante." : query.saved === "stock" ? "Bestand wurde aktualisiert." : "Änderungen gespeichert."}</div>}
-    {query.error && <div className="form-alert" role="alert">{query.error === "stock" ? "Bestand konnte nicht aktualisiert werden. Bitte prüfen Sie die Eingabe und versuchen Sie es erneut." : `Änderungen konnten nicht gespeichert werden (${query.error}).`}</div>}
+    {query.error && <div className="form-alert" role="alert">{productErrorMessages[query.error] ?? `Änderungen konnten nicht gespeichert werden (${query.error}).`}</div>}
     <form action={updateProductAction} className="admin-editor">
       <input type="hidden" name="id" value={product.id} />
       <section>
