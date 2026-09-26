@@ -70,6 +70,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           preload
           quality={90}
           sizes="(max-width: 820px) calc(100vw - 2rem), (max-width: 1440px) 54vw, 700px"
+          style={{ objectFit: "cover", objectPosition: "46% 54%" }}
         />
       </figure>
     </section>
