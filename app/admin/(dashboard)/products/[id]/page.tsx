@@ -1,8 +1,11 @@
+import Link from "next/link";
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addProductImageAction, addVariantAction, updateProductAction, updateVariantStockAction } from "../../actions";
 import { ProductImageUpload } from "@/components/admin/product-image-upload";
 import { requireAdmin } from "@/lib/auth/admin";
+import { AdminStatus } from "@/components/admin/admin-status";
 
 export default async function AdminProductEditor({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string; created?: string }> }) {
   await requireAdmin();
@@ -15,7 +18,8 @@ export default async function AdminProductEditor({ params, searchParams }: { par
   if (!product) notFound();
 
   return <>
-    <header className="admin-page-heading"><div><p>Produkt bearbeiten</p><h1>{product.name_de}</h1></div></header>
+    <Link className="admin-back-link" href="/admin/products"><ArrowLeft size={16} aria-hidden="true" /> Zurück zur Produktliste</Link>
+    <header className="admin-page-heading admin-detail-heading"><div><p>Produkt bearbeiten</p><h1>{product.name_de}</h1><AdminStatus status={product.active ? "active" : "archived"} /></div></header>
     {(query.saved || query.created) && <div className="admin-success">{query.created ? "Produkt archiviert angelegt. Ergänzen Sie jetzt Inhalt, Bild und Variante." : "Änderungen gespeichert."}</div>}
     {query.error && <div className="form-alert">Änderungen konnten nicht gespeichert werden ({query.error}).</div>}
     <form action={updateProductAction} className="admin-editor">

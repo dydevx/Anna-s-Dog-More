@@ -1,12 +1,36 @@
 import Link from "next/link";
-import { ChartLineUp, Cube, Package, SignOut, SlidersHorizontal, Truck } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOut, SignOut } from "@phosphor-icons/react/dist/ssr";
 import { requireAdmin } from "@/lib/auth/admin";
 import { signOutAction } from "@/app/[locale]/account/actions";
+import { AdminNavigation } from "@/components/admin/admin-navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAdmin();
-  const links = [["Übersicht", "/admin", ChartLineUp], ["Produkte", "/admin/products", Cube], ["Bestellungen", "/admin/orders", Package], ["Versand", "/admin/shipping", Truck], ["Kategorien", "/admin/categories", SlidersHorizontal]] as const;
-  return <div className="admin-shell"><aside className="admin-sidebar"><Link className="wordmark compact" href="/admin"><span>ANNA&apos;S</span><small>ADMIN</small></Link><nav>{links.map(([label, href, Icon]) => <Link href={href} key={href}><Icon size={19} />{label}</Link>)}</nav><div className="admin-user"><small>{user.email}</small><form action={signOutAction}><input type="hidden" name="locale" value="de" /><button type="submit"><SignOut size={18} />Abmelden</button></form></div></aside><main className="admin-main">{children}</main></div>;
+  return (
+    <div className="admin-shell">
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-brand">
+          <Link className="wordmark compact" href="/admin">
+            <span>ANNA&apos;S</span>
+            <small>ADMIN</small>
+          </Link>
+          <span>Shopverwaltung</span>
+        </div>
+        <AdminNavigation />
+        <div className="admin-user">
+          <Link className="admin-store-link" href="/de" target="_blank" rel="noreferrer">
+            Zum Shop <ArrowSquareOut size={17} aria-hidden="true" />
+          </Link>
+          <small title={user.email}>{user.email}</small>
+          <form action={signOutAction}>
+            <input type="hidden" name="locale" value="de" />
+            <button type="submit"><SignOut size={18} aria-hidden="true" /><span>Abmelden</span></button>
+          </form>
+        </div>
+      </aside>
+      <main className="admin-main" id="admin-main">{children}</main>
+    </div>
+  );
 }

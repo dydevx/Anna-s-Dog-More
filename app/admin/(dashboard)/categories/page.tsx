@@ -1,3 +1,4 @@
+import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createCategoryAction, updateCategoryAction } from "../actions";
 import { requireAdmin } from "@/lib/auth/admin";
@@ -7,7 +8,7 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
   const query = await searchParams;
   const { data } = await createAdminClient().from("categories").select("id,name_de,name_en,slug,active,sort_order,products(count)").order("sort_order");
   return <>
-    <header className="admin-page-heading"><div><p>Katalogstruktur</p><h1>Kategorien</h1></div></header>
+    <header className="admin-page-heading"><div><p>Katalogstruktur</p><h1>Kategorien</h1><span>{data?.length ?? 0} Kategorien steuern die Navigation im Shop.</span></div></header>
     {query.saved && <div className="admin-success">Kategorie gespeichert.</div>}
     {query.error && <div className="form-alert">Kategorie konnte nicht gespeichert werden.</div>}
     <section className="admin-section">
@@ -24,16 +25,21 @@ export default async function AdminCategoriesPage({ searchParams }: { searchPara
         </form>)}
       </div>
     </section>
-    <section className="admin-section">
-      <div className="admin-section-heading"><h2>Kategorie anlegen</h2><p>Der Slug bleibt nach dem Anlegen stabil, damit bestehende URLs nicht brechen.</p></div>
-      <form action={createCategoryAction} className="admin-form-grid">
-        <label>Name DE<input name="name_de" required /></label>
-        <label>Name EN<input name="name_en" required /></label>
-        <label>SEO Slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" /></label>
-        <label>Reihenfolge<input name="sort_order" type="number" defaultValue="0" required /></label>
-        <label className="admin-check"><input name="active" type="checkbox" />Aktiv</label>
-        <button className="button primary-button" type="submit">Kategorie anlegen</button>
-      </form>
-    </section>
+    <details className="admin-create-panel" open={Boolean(query.error)}>
+      <summary>
+        <span className="admin-create-icon"><Plus size={19} aria-hidden="true" /></span>
+        <span><strong>Kategorie anlegen</strong><small>Der Slug bleibt stabil, damit bestehende URLs nicht brechen.</small></span>
+      </summary>
+      <div className="admin-create-content">
+        <form action={createCategoryAction} className="admin-form-grid">
+          <label>Name DE<input name="name_de" required /></label>
+          <label>Name EN<input name="name_en" required /></label>
+          <label>SEO Slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" /></label>
+          <label>Reihenfolge<input name="sort_order" type="number" defaultValue="0" required /></label>
+          <label className="admin-check"><input name="active" type="checkbox" />Aktiv</label>
+          <div className="admin-form-action"><button className="button primary-button" type="submit">Kategorie anlegen</button></div>
+        </form>
+      </div>
+    </details>
   </>;
 }
