@@ -52,7 +52,7 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
       <section className="category-directory-grid" aria-label={t.nav.categories}>
         {directory.map(({ category, count, image }) => (
           <Link className="category-directory-card" href={`/${locale}/shop/${category.slug}`} key={category.id}>
-            {image && <Image src={image.url} alt={image.alt[locale]} fill sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 66vw" />}
+            {image && <Image src={image.url} alt={image.alt[locale]} fill sizes="(max-width: 560px) calc(100vw - 2rem), (max-width: 820px) 50vw, 33vw" />}
             <span>
               <strong>{category.name[locale]}</strong>
               <small>{count} {count === 1 ? (locale === "de" ? "Produkt" : "product") : (locale === "de" ? "Produkte" : "products")}</small>

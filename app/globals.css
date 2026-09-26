@@ -165,18 +165,20 @@ p { text-wrap: pretty; }
 .page-intro h1 { margin-bottom: .8rem; font-family: var(--font-display), Georgia, serif; font-size: clamp(3rem, 6vw, 5.6rem); font-weight: 520; line-height: 1; letter-spacing: -.03em; }
 .page-intro p { max-width: 58ch; color: var(--muted); font-size: 1rem; }
 .category-directory-intro { margin-bottom: clamp(2rem, 4vw, 3.5rem); }
-.category-directory-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 1rem; }
-.category-directory-card { position: relative; min-height: 330px; grid-column: span 4; overflow: hidden; border-radius: var(--radius-card); background: var(--accent-soft); isolation: isolate; }
-.category-directory-card:first-child, .category-directory-card:nth-child(4) { grid-column: span 8; }
-.category-directory-card:last-child { min-height: 380px; grid-column: span 12; }
-.category-directory-card::after { content: ""; position: absolute; inset: 35% 0 0; z-index: 1; background: linear-gradient(to bottom, transparent, color-mix(in oklch, var(--ink) 84%, transparent)); pointer-events: none; }
+.category-directory-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: clamp(.85rem, 1.4vw, 1.25rem); }
+.category-directory-card { position: relative; min-height: 310px; aspect-ratio: 4 / 3; grid-column: span 4; overflow: hidden; border-radius: var(--radius-card); background: var(--accent); isolation: isolate; }
+.category-directory-card:last-child:nth-child(3n + 1) { grid-column: 5 / span 4; }
+.category-directory-card:nth-child(3n + 1):nth-last-child(2) { grid-column: 3 / span 4; }
+.category-directory-card:nth-child(3n + 2):last-child { grid-column: 7 / span 4; }
+.category-directory-card::before { content: ""; position: absolute; inset: 0; z-index: 2; border: 1px solid color-mix(in oklch, white 20%, transparent); border-radius: inherit; pointer-events: none; }
+.category-directory-card::after { content: ""; position: absolute; inset: 28% 0 0; z-index: 1; background: linear-gradient(to bottom, transparent, color-mix(in oklch, var(--ink) 90%, transparent)); pointer-events: none; }
 .category-directory-card img { object-fit: cover; transition: transform 520ms var(--ease); }
-.category-directory-card:hover img { transform: scale(1.035); }
-.category-directory-card > span { position: absolute; z-index: 2; left: clamp(1.2rem, 2.5vw, 2rem); right: clamp(1.2rem, 2.5vw, 2rem); bottom: clamp(1.2rem, 2.5vw, 1.8rem); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: .3rem 1rem; color: white; }
-.category-directory-card strong { font-family: var(--font-display), Georgia, serif; font-size: clamp(1.65rem, 2.8vw, 2.7rem); font-weight: 520; line-height: 1.08; }
-.category-directory-card small { grid-column: 1; color: color-mix(in oklch, white 76%, transparent); font-size: .72rem; font-weight: 680; }
-.category-directory-card svg { grid-column: 2; grid-row: 1 / 3; align-self: center; transition: transform var(--motion-fast) var(--ease); }
-.category-directory-card:hover svg { transform: translateX(4px); }
+.category-directory-card:hover img { transform: scale(1.025); }
+.category-directory-card > span { position: absolute; z-index: 3; left: clamp(1.15rem, 2vw, 1.65rem); right: clamp(1.15rem, 2vw, 1.65rem); bottom: clamp(1.15rem, 2vw, 1.5rem); display: grid; grid-template-columns: minmax(0, 1fr) 42px; align-items: end; gap: .38rem 1rem; color: white; }
+.category-directory-card strong { max-width: 15ch; font-family: var(--font-display), Georgia, serif; font-size: clamp(1.55rem, 2vw, 2rem); font-weight: 520; line-height: 1.08; letter-spacing: -.02em; text-wrap: balance; }
+.category-directory-card small { grid-column: 1; color: color-mix(in oklch, white 82%, transparent); font-size: .72rem; font-weight: 720; }
+.category-directory-card svg { width: 42px; height: 42px; padding: 11px; grid-column: 2; grid-row: 1 / 3; align-self: end; border: 1px solid color-mix(in oklch, white 52%, transparent); border-radius: 50%; transition: color var(--motion-fast) var(--ease), background-color var(--motion-fast) var(--ease), transform var(--motion-fast) var(--ease); }
+.category-directory-card:hover svg { transform: translateX(3px); background: white; color: var(--ink); }
 .listing-toolbar { min-height: 56px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--border); }
 .listing-toolbar > span { color: var(--muted); font-size: .8rem; }
 .listing-toolbar select { min-height: 42px; padding: .55rem 2.2rem .55rem .8rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); }
@@ -618,8 +620,8 @@ p { text-wrap: pretty; }
   .hero-copy { grid-row: 2; }
   .category-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 460px 300px; }
   .category-tile:first-child { grid-row: auto; grid-column: 1 / 3; }
-  .category-directory-card, .category-directory-card:first-child, .category-directory-card:nth-child(4) { min-height: 300px; grid-column: span 6; }
-  .category-directory-card:last-child { grid-column: span 12; }
+  .category-directory-card, .category-directory-card:last-child:nth-child(3n + 1), .category-directory-card:nth-child(3n + 1):nth-last-child(2), .category-directory-card:nth-child(3n + 2):last-child { min-height: 290px; grid-column: span 6; }
+  .category-directory-card:last-child:nth-child(odd) { grid-column: 4 / span 6; }
   .story-section { grid-template-columns: 1fr; }
   .story-visual { grid-row: 1; min-height: 58vw; }
   .collection-callout { grid-template-columns: 1fr; }
@@ -699,7 +701,7 @@ p { text-wrap: pretty; }
   .category-grid { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .5rem; }
   .category-tile, .category-tile:first-child { min-width: 84vw; min-height: 440px; scroll-snap-align: start; }
   .category-directory-grid { display: grid; grid-template-columns: 1fr; }
-  .category-directory-card, .category-directory-card:first-child, .category-directory-card:nth-child(4), .category-directory-card:last-child { min-height: 300px; grid-column: 1; }
+  .category-directory-card, .category-directory-card:last-child:nth-child(3n + 1), .category-directory-card:nth-child(3n + 1):nth-last-child(2), .category-directory-card:nth-child(3n + 2):last-child, .category-directory-card:last-child:nth-child(odd) { min-height: 290px; grid-column: 1; }
   .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.35rem .65rem; }
   .product-card-copy { padding-top: .7rem; }
   .product-card-meta { align-items: flex-start; flex-direction: column; gap: .35rem; }
