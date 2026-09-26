@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartLineUp,
@@ -18,6 +19,23 @@ const links = [
   { label: "Kategorien", href: "/admin/categories", icon: SlidersHorizontal },
 ] as const;
 
+function NavigationPendingIndicator() {
+  const { pending } = useLinkStatus();
+
+  return (
+    <>
+      <span
+        className="admin-nav-pending"
+        data-pending={pending ? "true" : undefined}
+        aria-hidden="true"
+      />
+      <span className="sr-only" aria-live="polite">
+        {pending ? "Seite wird geladen" : ""}
+      </span>
+    </>
+  );
+}
+
 export function AdminNavigation() {
   const pathname = usePathname();
 
@@ -30,6 +48,7 @@ export function AdminNavigation() {
           <Link href={href} key={href} aria-current={active ? "page" : undefined}>
             <Icon size={19} weight={active ? "fill" : "regular"} aria-hidden="true" />
             <span>{label}</span>
+            <NavigationPendingIndicator />
           </Link>
         );
       })}
