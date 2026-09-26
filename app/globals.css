@@ -508,7 +508,7 @@ p { text-wrap: pretty; }
 .editorial-hero { display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: clamp(2rem, 6vw, 7rem); }
 .editorial-hero > div > p { color: var(--muted); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 .editorial-hero h1 { max-width: 11ch; font-family: var(--font-display), Georgia, serif; font-size: clamp(3.3rem, 6.7vw, 6rem); font-weight: 520; line-height: .98; letter-spacing: -.035em; }
-.editorial-hero img { width: 100%; border-radius: var(--radius-card); background: var(--surface); object-fit: contain; }
+.editorial-hero img { width: 100%; height: auto; display: block; border-radius: var(--radius-card); }
 .editorial-copy { margin: clamp(5rem, 10vw, 10rem) 0; padding-top: 3rem; display: grid; grid-template-columns: .7fr 1.3fr; gap: 3rem; border-top: 1px solid var(--border); }
 .editorial-copy h2, .editorial-cta h2 { font-family: var(--font-display), Georgia, serif; font-size: clamp(2.5rem, 4vw, 4rem); font-weight: 520; line-height: 1.08; }
 .editorial-copy > div { max-width: 68ch; color: var(--muted); font-size: 1rem; line-height: 1.85; }
