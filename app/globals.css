@@ -180,6 +180,14 @@ p { text-wrap: pretty; }
 .listing-toolbar { min-height: 56px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--border); }
 .listing-toolbar > span { color: var(--muted); font-size: .8rem; }
 .listing-toolbar select { min-height: 42px; padding: .55rem 2.2rem .55rem .8rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); }
+.listing-search { position: relative; width: min(390px, 34vw); margin-left: auto; color: var(--muted); }
+.listing-search > svg { position: absolute; left: .9rem; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.listing-search input { width: 100%; min-height: 42px; padding: .55rem 2.75rem .55rem 2.6rem; border: 1px solid var(--border); border-radius: var(--radius-control); outline: 0; background: var(--surface); color: var(--ink); transition: border-color var(--motion-fast) var(--ease), box-shadow var(--motion-fast) var(--ease); }
+.listing-search input::placeholder { color: var(--muted); opacity: .88; }
+.listing-search input:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 14%, transparent); }
+.listing-search input::-webkit-search-cancel-button { display: none; }
+.listing-search button { position: absolute; right: .35rem; top: 50%; width: 34px; height: 34px; padding: 0; display: grid; place-items: center; transform: translateY(-50%); border: 0; border-radius: 50%; background: transparent; color: var(--muted); }
+.listing-search button:hover { background: var(--accent-soft); color: var(--ink); }
 .listing-grid { display: grid; grid-template-columns: 230px 1fr; gap: clamp(2rem, 4vw, 4rem); }
 .filter-content fieldset { margin: 0 0 2rem; padding: 0; border: 0; }
 .filter-content legend { margin-bottom: .85rem; font-weight: 800; }
@@ -626,6 +634,8 @@ p { text-wrap: pretty; }
   .shop-loading-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .filter-sidebar { display: none; }
   .filter-trigger, .filter-mobile-heading { display: flex; }
+  .listing-toolbar { padding-block: .7rem; flex-wrap: wrap; }
+  .listing-search { width: 100%; margin-left: 0; order: 4; flex: 1 0 100%; }
   .filter-drawer { margin-left: auto; padding: 1.5rem; transform: translateX(100%); }
   .filter-drawer[data-state="open"] { transform: translateX(0); transition-duration: var(--motion-base); transition-timing-function: var(--ease); }
   .listing-products { grid-template-columns: repeat(2, minmax(0, 1fr)); }
