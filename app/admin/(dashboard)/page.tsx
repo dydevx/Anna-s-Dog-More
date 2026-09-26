@@ -18,13 +18,18 @@ export default async function AdminDashboard() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
-  const [{ data: recent }, { count: pending }, { data: today }, { count: lowStock }] = await Promise.all([
+  const [{ data: recent }, { count: pending }, { data: today }, { data: stockLevels, error: stockLevelsError }] = await Promise.all([
     admin.from("orders").select("id,order_number,email,grand_total,currency,order_status,created_at").order("created_at", { ascending: false }).limit(8),
     admin.from("orders").select("id", { count: "exact", head: true }).eq("order_status", "pending_payment"),
     admin.from("orders").select("grand_total,currency").gte("created_at", start.toISOString()).eq("payment_status", "paid"),
-    admin.from("product_variants").select("id", { count: "exact", head: true }).filter("stock_quantity", "lte", "low_stock_threshold").eq("active", true),
+    admin.from("product_variants").select("stock_quantity,low_stock_threshold").eq("active", true),
   ]);
 
+  if (stockLevelsError) throw new Error("Unable to load low-stock variants");
+
+  const lowStock = (stockLevels ?? []).filter(
+    (variant) => Number(variant.stock_quantity) <= Number(variant.low_stock_threshold),
+  ).length;
   const revenue = (today ?? []).reduce((sum, order) => sum + Number(order.grand_total), 0);
   const formattedDate = new Intl.DateTimeFormat("de-CH", {
     weekday: "long",
@@ -57,9 +62,9 @@ export default async function AdminDashboard() {
           <strong>{pending ?? 0}</strong>
           <small>Bestellungen warten auf Zahlung</small>
         </article>
-        <article data-alert={(lowStock ?? 0) > 0 ? "true" : undefined}>
+        <article data-alert={lowStock > 0 ? "true" : undefined}>
           <div><span>Niedriger Bestand</span><WarningCircle size={22} aria-hidden="true" /></div>
-          <strong>{lowStock ?? 0}</strong>
+          <strong>{lowStock}</strong>
           <small>aktive Varianten prüfen</small>
         </article>
       </section>
