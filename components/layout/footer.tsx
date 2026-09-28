@@ -40,7 +40,10 @@ export function Footer({ locale }: { locale: Locale }) {
         </section>
       </div>
 
-      <div className="footer-bottom"><span>© 2026 Anna&apos;s Dog & More. {isDe ? "Alle Rechte vorbehalten." : "All rights reserved."}</span><span>{isDe ? "Gestaltet von" : "Designed by"} <strong>HoangCaster</strong></span></div>
+      <div className="footer-bottom">
+        <span>© 2026 Anna&apos;s Dog & More. {isDe ? "Alle Rechte vorbehalten." : "All rights reserved."}</span>
+        <span className="footer-credit"><span>{isDe ? "Gestaltet von" : "Designed by"}</span><strong>HoangCaster</strong></span>
+      </div>
     </div>
   </footer>;
 }

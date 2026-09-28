@@ -159,6 +159,8 @@ p { text-wrap: pretty; }
 .footer-hours dl > div { display: grid; grid-template-columns: 1fr auto; gap: 1.2rem; }
 .footer-hours dd { margin: 0; font-variant-numeric: tabular-nums; }
 .footer-bottom { padding-top: 1.35rem; display: flex; justify-content: space-between; gap: 1rem; border-top: 1px solid color-mix(in oklch, var(--background) 13%, var(--ink)); color: color-mix(in oklch, var(--background) 56%, var(--ink)); font-size: .7rem; }
+.footer-credit { margin-top: -.45rem; padding: .42rem .72rem; display: inline-flex; align-items: baseline; gap: .38rem; border-radius: 999px; background: color-mix(in oklch, var(--background) 9%, transparent); color: color-mix(in oklch, var(--background) 82%, var(--ink)); font-size: .76rem; font-weight: 620; letter-spacing: .01em; }
+.footer-credit strong { color: white; font-size: .88rem; font-weight: 820; letter-spacing: .025em; }
 
 .page-shell, .product-page { width: min(100%, var(--container)); margin: 0 auto; padding: clamp(2.25rem, 5vw, 5rem) var(--gutter) clamp(5rem, 9vw, 9rem); }
 .page-intro { max-width: 880px; margin-bottom: clamp(2.5rem, 6vw, 5.5rem); }
