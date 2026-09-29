@@ -87,11 +87,11 @@ export const pdfToyProducts: Product[] = PDF_TOYS.map((row, index) => {
     ? { configuration: row.size }
     : { color: row.color, size: row.size };
   const descriptionDe = isBundle
-    ? `${row.nameDe} kombiniert ${row.bundle!.length} handgeknüpfte LABONI Baumwollspielzeuge für abwechslungsreiche Kau-, Wurf- und Apportierspiele.`
-    : `${row.nameDe} ist ein handgeknüpftes LABONI Hundespielzeug aus reiner Baumwolle für Kau-, Wurf- und Apportierspiele.`;
+    ? `${row.nameDe} ist ein liebevoll zusammengestelltes Set aus Hundespielzeugen aus Baumwolltau. Die Spielzeuge eignen sich zum gemeinsamen Spielen, Kauen und Apportieren. Ihre strukturierten Oberflächen können beim Kauen die mechanische Zahnreinigung unterstützen.`
+    : `${row.nameDe} ist ein liebevoll gestaltetes Hundespielzeug aus Baumwolltau. Es eignet sich zum Spielen, Kauen und Apportieren. Die strukturierte Oberfläche kann beim Kauen die mechanische Zahnreinigung unterstützen.`;
   const descriptionEn = isBundle
-    ? `${row.nameEn} combines ${row.bundle!.length} hand-knotted LABONI cotton toys for varied chewing, throwing and retrieving games.`
-    : `${row.nameEn} is a hand-knotted LABONI dog toy made from pure cotton for chewing, throwing and retrieving games.`;
+    ? `${row.nameEn} is a thoughtfully assembled set of cotton-rope dog toys. The toys are suitable for interactive play, chewing and retrieving. Their textured surfaces can help support mechanical tooth cleaning during chewing.`
+    : `${row.nameEn} is a thoughtfully designed cotton-rope dog toy. It is suitable for playing, chewing and retrieving. The textured surface can help support mechanical tooth cleaning during chewing.`;
 
   return {
     id: stableUuid("31", index),

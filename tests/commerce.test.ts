@@ -4,6 +4,7 @@ import { formatMoney, toMinorUnits } from "@/lib/money";
 import { checkoutSchema } from "@/lib/validation/checkout";
 import { paymentMethodsForCurrency } from "@/lib/payments/methods";
 import { getOptionGroups, resolveVariant } from "@/lib/product-variants";
+import { getProductDescription, getProductDetailEntries, getProductSafetyNotice } from "@/lib/product-content";
 import { clampPurchaseQuantity, getPurchasableLimit } from "@/lib/quantity";
 import { ADMIN_LOGIN_EMAIL, resolveAdminLogin } from "@/lib/auth/admin-login";
 import { getPasswordResetErrorKey } from "@/lib/auth/password-reset";
@@ -85,6 +86,16 @@ describe("commerce primitives", () => {
     const set = products.find((product) => product.slug === "big-ocean");
     expect(set?.productType).toBe("bundle");
     expect(set?.bundleItems?.map((item) => item.childSku)).toEqual(["10600", "11710", "12000"]);
+  });
+
+  it("uses original storefront copy and safety guidance for dog toys", () => {
+    const toy = products.find((product) => product.slug === "emma-ente");
+    expect(toy).toBeDefined();
+    expect(getProductDescription(toy!, "de")).toContain("liebevoll gestaltetes Hundespielzeug");
+    expect(getProductDescription(toy!, "de")).not.toContain("Varianten und Produktbilder");
+    expect(getProductSafetyNotice(toy!, "de")).toContain("beaufsichtigen");
+    expect(getProductDetailEntries(toy!, "de")).toContainEqual(["brand", "LABONI"]);
+    expect(getProductDetailEntries(toy!, "de").some(([key]) => key === "source")).toBe(false);
   });
 
   it("imports the requested dog bed collection without changing numeric prices", () => {

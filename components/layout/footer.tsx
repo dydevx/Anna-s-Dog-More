@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Clock, MapPin } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, Clock, EnvelopeSimple, MapPin, Phone } from "@phosphor-icons/react/dist/ssr";
 import type { Locale } from "@/types/catalog";
 import { OPENING_HOURS, STORE, localizeHours } from "@/lib/store";
 
@@ -29,6 +29,10 @@ export function Footer({ locale }: { locale: Locale }) {
             <address>{STORE.street}<br />{STORE.postalCode} {STORE.city}<br />{STORE.country}</address>
             <span>{isDe ? "Auf Karte ansehen" : "View on map"}<ArrowUpRight size={15} weight="bold" aria-hidden="true" /></span>
           </a>
+          <div className="footer-contact-links" aria-label={isDe ? "Kontaktdaten" : "Contact details"}>
+            <a href={STORE.phoneHref}><Phone size={18} weight="light" aria-hidden="true" /><span>{STORE.phone}</span></a>
+            <a href={STORE.emailHref}><EnvelopeSimple size={18} weight="light" aria-hidden="true" /><span>{STORE.email}</span></a>
+          </div>
           <div className="footer-hours">
             <Clock size={19} weight="light" aria-hidden="true" />
             <dl>

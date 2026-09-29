@@ -7,6 +7,10 @@ export const STORE = {
   city: "Zürich",
   country: "Switzerland",
   countryCode: "CH",
+  phone: "+41 76 815 86 88",
+  phoneHref: "tel:+41768158688",
+  email: "annasdog@gmx.net",
+  emailHref: "mailto:annasdog@gmx.net",
 } as const;
 
 export const OPENING_HOURS = [

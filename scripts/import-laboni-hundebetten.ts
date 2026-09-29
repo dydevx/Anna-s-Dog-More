@@ -128,6 +128,19 @@ function originalCopy(name: string, locale: "de" | "en") {
   return locale === "de" ? "LABONI Schlafplatz mit hochwertiger Verarbeitung und pflegeleichten Materialien." : "LABONI sleeping place with quality craftsmanship and easy-care materials.";
 }
 
+function originalDescription(name: string, locale: "de" | "en") {
+  const cleanName = name.replace(/\s+-\s+(Kult-Spielzeug|Spielzeug-Set) für Hunde$/i, "");
+  const isSet = /spielzeug-set|toy set/i.test(name);
+  if (locale === "de") {
+    return isSet
+      ? `${cleanName} ist ein liebevoll zusammengestelltes Set aus Hundespielzeugen aus Baumwolltau. Die Spielzeuge eignen sich zum gemeinsamen Spielen, Kauen und Apportieren. Ihre strukturierten Oberflächen können beim Kauen die mechanische Zahnreinigung unterstützen.`
+      : `${cleanName} ist ein liebevoll gestaltetes Hundespielzeug aus Baumwolltau. Es eignet sich zum Spielen, Kauen und Apportieren. Die strukturierte Oberfläche kann beim Kauen die mechanische Zahnreinigung unterstützen.`;
+  }
+  return isSet
+    ? `${cleanName} is a thoughtfully assembled set of cotton-rope dog toys. The toys are suitable for interactive play, chewing and retrieving. Their textured surfaces can help support mechanical tooth cleaning during chewing.`
+    : `${cleanName} is a thoughtfully designed cotton-rope dog toy. It is suitable for playing, chewing and retrieving. The textured surface can help support mechanical tooth cleaning during chewing.`;
+}
+
 function sourceId(sourceUrl: string) {
   return sourceUrl.match(/\/(\d+)\//)?.[1] ?? "source";
 }
@@ -216,8 +229,8 @@ async function run() {
       name_en: source.name,
       short_description_de: originalCopy(source.name, "de"),
       short_description_en: originalCopy(source.name, "en"),
-      description_de: `${originalCopy(source.name, "de")} Varianten und Produktbilder werden direkt aus dem verknüpften LABONI Angebot übernommen.`,
-      description_en: `${originalCopy(source.name, "en")} Variants and product images are synchronized from the linked LABONI offer.`,
+      description_de: targetCategory === "spielen" ? originalDescription(source.name, "de") : originalCopy(source.name, "de"),
+      description_en: targetCategory === "spielen" ? originalDescription(source.name, "en") : originalCopy(source.name, "en"),
       product_type: source.groups.length > 0 ? "configurable" : "simple",
       base_price: source.price,
       currency: "CHF",

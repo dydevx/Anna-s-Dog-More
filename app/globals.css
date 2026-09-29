@@ -154,6 +154,9 @@ p { text-wrap: pretty; }
 .footer-address { display: flex; align-items: flex-start; flex-direction: column; gap: .9rem; color: color-mix(in oklch, var(--background) 76%, var(--ink)); }
 .footer-address address { font-style: normal; font-size: .82rem; line-height: 1.65; }
 .footer-address > span { display: inline-flex; align-items: center; gap: .35rem; white-space: nowrap; color: var(--background); font-size: .7rem; font-weight: 750; border-bottom: 1px solid color-mix(in oklch, var(--background) 38%, var(--ink)); }
+.footer-contact-links { margin-top: 1.25rem; display: grid; gap: .45rem; }
+.footer-contact-links a { width: fit-content; min-height: 30px; display: inline-flex; align-items: center; gap: .6rem; color: color-mix(in oklch, var(--background) 82%, var(--ink)); font-size: .78rem; transition: color var(--motion-fast) var(--ease); }
+.footer-contact-links a:hover { color: white; }
 .footer-hours { margin-top: 1.35rem; padding-top: 1.1rem; display: grid; grid-template-columns: auto 1fr; align-items: start; gap: .7rem; border-top: 1px solid color-mix(in oklch, var(--background) 13%, var(--ink)); color: color-mix(in oklch, var(--background) 72%, var(--ink)); }
 .footer-hours dl { margin: 0; display: grid; gap: .3rem; font-size: .76rem; }
 .footer-hours dl > div { display: grid; grid-template-columns: 1fr auto; gap: 1.2rem; }
@@ -267,10 +270,14 @@ p { text-wrap: pretty; }
 .product-description { margin-top: clamp(4rem, 9vw, 9rem); padding-top: clamp(3rem, 6vw, 6rem); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(3rem, 8vw, 9rem); border-top: 1px solid var(--border); }
 .product-description h2 { font-family: var(--font-display), Georgia, serif; font-size: clamp(2.3rem, 4vw, 3.8rem); font-weight: 520; }
 .product-description p { max-width: 66ch; color: var(--muted); font-size: 1rem; line-height: 1.85; }
+.product-facts > h2 { margin-bottom: 1rem; font-family: var(--font-body), sans-serif; font-size: 1rem; font-weight: 780; }
 .product-description dl { margin: 0; }
 .product-description dl > div { padding: .9rem 0; display: grid; grid-template-columns: 135px 1fr; gap: 1rem; border-bottom: 1px solid var(--border); }
 .product-description dt { color: var(--muted); text-transform: capitalize; }
 .product-description dd { margin: 0; font-weight: 680; }
+.product-safety { grid-column: 1 / -1; padding: clamp(1.25rem, 3vw, 2rem); border-radius: var(--radius-card); background: var(--accent-soft); }
+.product-safety h3 { margin: 0 0 .55rem; font-size: 1rem; }
+.product-safety p { max-width: 75ch; margin-bottom: 0; color: var(--ink); font-size: .9rem; line-height: 1.7; }
 .related-products { margin-top: clamp(5rem, 10vw, 10rem); }
 .category-story { margin-top: clamp(5rem, 10vw, 9rem); padding: clamp(2.5rem, 6vw, 5rem) 0 0; display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2rem, 8vw, 8rem); border-top: 1px solid var(--border); }
 .category-story h2 { font-family: var(--font-display), Georgia, serif; font-size: clamp(2.4rem, 4vw, 4.2rem); font-weight: 520; line-height: 1.05; letter-spacing: -.025em; }
@@ -552,6 +559,9 @@ p { text-wrap: pretty; }
 .contact-grid h2 { margin: 2rem 0 1rem; font-size: 1.15rem; }
 .contact-grid address { font-style: normal; font-size: 1rem; }
 .contact-grid p { max-width: 52ch; color: var(--muted); }
+.contact-direct { margin-top: 1.65rem; padding-top: 1.35rem; display: grid; gap: .65rem; border-top: 1px solid color-mix(in oklch, white 24%, var(--accent)); }
+.contact-direct a { width: fit-content; min-height: 32px; display: inline-flex; align-items: center; gap: .65rem; color: color-mix(in oklch, white 84%, var(--accent)); font-weight: 650; transition: color var(--motion-fast) var(--ease); }
+.contact-direct a:hover { color: white; }
 .contact-hours > svg { color: var(--accent); }
 .contact-hours h2 { margin-top: 2rem; }
 .contact-hours dl { margin: 0; }
@@ -743,6 +753,7 @@ p { text-wrap: pretty; }
   .footer-statement { max-width: 17ch; font-size: clamp(2.2rem, 10.5vw, 2.85rem); }
   .footer-columns { grid-template-columns: 1fr 1fr; gap: 2rem 1rem; }
   .footer-link-group a { min-height: 44px; }
+  .footer-contact-links a, .contact-direct a { min-height: 44px; }
   .footer-store { padding: 1.2rem; }
   .footer-address { align-items: flex-start; flex-direction: column; }
   .footer-bottom { flex-direction: column; }
