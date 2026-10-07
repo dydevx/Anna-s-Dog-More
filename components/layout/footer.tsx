@@ -25,6 +25,7 @@ export function Footer({ locale }: { locale: Locale }) {
         <section className="footer-store" aria-labelledby="footer-store-heading">
           <div className="footer-store-heading"><MapPin size={22} weight="light" aria-hidden="true" /><h2 id="footer-store-heading">{isDe ? "Besuchen Sie uns" : "Visit us"}</h2></div>
           <strong>Anna&apos;s Dog & More</strong>
+          <span className="footer-store-business">{STORE.beautyName}</span>
           <a className="footer-address" href={mapHref} target="_blank" rel="noreferrer">
             <address>{STORE.street}<br />{STORE.postalCode} {STORE.city}<br />{STORE.country}</address>
             <span>{isDe ? "Auf Karte ansehen" : "View on map"}<ArrowUpRight size={15} weight="bold" aria-hidden="true" /></span>
@@ -32,6 +33,7 @@ export function Footer({ locale }: { locale: Locale }) {
           <div className="footer-contact-links" aria-label={isDe ? "Kontaktdaten" : "Contact details"}>
             <a href={STORE.phoneHref}><Phone size={18} weight="light" aria-hidden="true" /><span>{STORE.phone}</span></a>
             <a href={STORE.emailHref}><EnvelopeSimple size={18} weight="light" aria-hidden="true" /><span>{STORE.email}</span></a>
+            <a href={STORE.beautyEmailHref}><EnvelopeSimple size={18} weight="light" aria-hidden="true" /><span>{STORE.beautyEmail}</span></a>
           </div>
           <div className="footer-hours">
             <Clock size={19} weight="light" aria-hidden="true" />
