@@ -11,7 +11,6 @@ export const STORE = {
   phoneHref: "tel:+41768158688",
   email: "annasdog@gmx.net",
   emailHref: "mailto:annasdog@gmx.net",
-  beautyName: "Anna Nails & Beauty",
   beautyEmail: "info@anna-beauty.ch",
   beautyEmailHref: "mailto:info@anna-beauty.ch",
 } as const;

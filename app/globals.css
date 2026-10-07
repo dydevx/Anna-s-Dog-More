@@ -557,10 +557,6 @@ p { text-wrap: pretty; }
 .contact-grid article { min-height: 310px; padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); }
 .contact-grid article:first-child { background: var(--accent); color: white; border-color: transparent; }
 .contact-grid h2 { margin: 2rem 0 1rem; font-size: 1.15rem; }
-.contact-beauty { margin-bottom: 1rem; display: grid; gap: .3rem; }
-.contact-beauty strong { font-size: .95rem; }
-.contact-beauty a { width: fit-content; min-height: 32px; display: inline-flex; align-items: center; color: color-mix(in oklch, white 84%, var(--accent)); text-decoration-thickness: 1px; text-underline-offset: .2em; transition: color var(--motion-fast) var(--ease); }
-.contact-beauty a:hover { color: white; }
 .contact-grid address { font-style: normal; font-size: 1rem; }
 .contact-grid p { max-width: 52ch; color: var(--muted); }
 .contact-direct { margin-top: 1.65rem; padding-top: 1.35rem; display: grid; gap: .65rem; border-top: 1px solid color-mix(in oklch, white 24%, var(--accent)); }
@@ -757,7 +753,7 @@ p { text-wrap: pretty; }
   .footer-statement { max-width: 17ch; font-size: clamp(2.2rem, 10.5vw, 2.85rem); }
   .footer-columns { grid-template-columns: 1fr 1fr; gap: 2rem 1rem; }
   .footer-link-group a { min-height: 44px; }
-  .footer-contact-links a, .contact-direct a, .contact-beauty a { min-height: 44px; }
+  .footer-contact-links a, .contact-direct a { min-height: 44px; }
   .footer-store { padding: 1.2rem; }
   .footer-address { align-items: flex-start; flex-direction: column; }
   .footer-bottom { flex-direction: column; }
