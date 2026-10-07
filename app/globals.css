@@ -557,6 +557,8 @@ p { text-wrap: pretty; }
 .contact-grid article { min-height: 310px; padding: clamp(1.5rem, 4vw, 3.5rem); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); }
 .contact-grid article:first-child { background: var(--accent); color: white; border-color: transparent; }
 .contact-grid h2 { margin: 2rem 0 1rem; font-size: 1.15rem; }
+.contact-address h2 { margin-bottom: .35rem; }
+.contact-business-name { margin-bottom: 1rem; color: color-mix(in oklch, white 90%, var(--accent)); font-size: .95rem; font-weight: 650; }
 .contact-grid address { font-style: normal; font-size: 1rem; }
 .contact-grid p { max-width: 52ch; color: var(--muted); }
 .contact-direct { margin-top: 1.65rem; padding-top: 1.35rem; display: grid; gap: .65rem; border-top: 1px solid color-mix(in oklch, white 24%, var(--accent)); }
