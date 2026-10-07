@@ -16,6 +16,10 @@ export default async function ContactPage({ params }: { params: Promise<{ locale
       <article className="contact-address">
         <MapPin size={27} weight="light" aria-hidden="true" />
         <h2>Anna&apos;s Dog & More</h2>
+        <div className="contact-beauty">
+          <strong>{STORE.beautyName}</strong>
+          <a href={STORE.beautyEmailHref}>{de ? "E-Mail" : "Email"}: {STORE.beautyEmail}</a>
+        </div>
         <address>{STORE.street}<br />{STORE.postalCode} {STORE.city}<br />{STORE.country}</address>
         <div className="contact-direct" aria-label={de ? "Direkter Kontakt" : "Direct contact"}>
           <a href={STORE.phoneHref}><Phone size={19} weight="light" aria-hidden="true" /><span>{STORE.phone}</span></a>
