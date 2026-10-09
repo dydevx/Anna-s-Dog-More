@@ -1,7 +1,29 @@
 -- Run this file in Supabase SQL Editor. It is additive and can be run again.
+-- Intended for this project's postgres-owned application tables.
+-- Select postgres in SQL Editor; the explicit role applies only to this transaction.
 begin;
+set local role postgres;
 set local lock_timeout = '5s';
 set local statement_timeout = '60s';
+
+-- Check ownership in the same transaction as the DDL, before making changes.
+do $permissions$
+declare
+  product_owner name;
+begin
+  select tableowner into product_owner
+  from pg_catalog.pg_tables
+  where schemaname = 'public' and tablename = 'products';
+  if not found then
+    raise exception 'Performance migration: public.products was not found';
+  end if;
+  if product_owner <> current_user then
+    raise exception 'Performance migration: running role %, login role %, products owner %',
+      current_user, session_user, product_owner
+      using errcode = '42501';
+  end if;
+end;
+$permissions$;
 
 -- The catalog reads active products newest first and one ordered image per product.
 create index if not exists products_active_created_idx

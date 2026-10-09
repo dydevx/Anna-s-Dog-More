@@ -46,6 +46,39 @@ paste the complete contents of `database/migrations/005_performance.sql`, then
 click **Run**. Apply this before deploying the updated application if possible.
 Do not re-run the initial schema migration on an existing database.
 
+Run as the table-owner role (normally `postgres` for tables created in Supabase's
+SQL Editor). This migration explicitly uses `SET LOCAL ROLE postgres` within its
+transaction and checks ownership of `public.products` before creating indexes.
+It does not change table ownership, role grants or RLS policies. PostgreSQL will
+refuse the role switch if the session is not allowed to use `postgres`.
+
+A service-role API key bypasses RLS but does not grant table ownership for index
+creation. If SQLSTATE `42501` says "must be owner of table products", run this in
+a new query to inspect the actual execution role and table owners:
+
+```sql
+select current_user as running_role, session_user as login_role,
+       tablename, tableowner as owner_role
+from pg_catalog.pg_tables
+where schemaname = 'public'
+  and tablename in ('products', 'product_images', 'product_variants',
+                   'orders', 'order_items', 'payments', 'addresses')
+order by tablename;
+```
+
+Do not put `ROLLBACK` before the diagnostic SELECT in the same query: it can
+reset a transaction-local role and make the reported identity differ from the
+role that ran the failing statement. If an aborted transaction needs clearing,
+run `ROLLBACK` alone first, then run the diagnostic as a separate query.
+
+If the editor is using `anon`, `authenticated` or `service_role`, select `postgres`
+and retry the entire migration when the tables belong to `postgres`. If the role
+is already `postgres` but ownership differs, investigate the owning role before
+changing permissions. Do not change table ownership or disable RLS to bypass
+this error without reviewing the actual ownership results. If both match but
+the revised migration still fails, capture the complete error including its
+DETAIL/CONTEXT, and inspect database event triggers before retrying.
+
 The file adds indexes for catalog/image ordering, bounded admin lists, paid-order
 totals and foreign-key lookups. It also adds `admin_dashboard_summary`, an
 aggregate available only to `service_role`, then refreshes table statistics and
@@ -55,11 +88,20 @@ PostgreSQL locking, bounded by a 5-second lock timeout and 60-second statement
 timeout. If a timeout occurs, the transaction rolls back; retry during a quiet
 period. No changes have been applied to the live database by this coding session.
 
-After a successful run, check the dashboard aggregate in SQL Editor:
+After a successful run, check the dashboard aggregate in SQL Editor with an
+explicit transaction-local role. A standalone SELECT can still run under the
+editor's selected restricted role after the migration commits:
 
 ```sql
+begin;
+set local role postgres;
 select public.admin_dashboard_summary(current_date::timestamptz);
+commit;
 ```
+
+Run the complete block. A permission error from a standalone SELECT does not
+establish that the migration failed; `anon` and `authenticated` are intentionally
+denied execution. Keep those restrictions in place.
 
 It should return `pending`, `low_stock`, `paid_count` and `revenue`. The query above
 uses the database session's date boundary; the application passes its own start
@@ -74,8 +116,10 @@ queries, full product details, search, facets/stock, pagination input and dashbo
 aggregation/fallback/error handling. Production HTTP checks cover DE/EN pages,
 search, sitemap and unauthenticated admin access.
 
-The SQL has been reviewed against the repository schema but has not been executed
-or benchmarked in PostgreSQL. A browser was unavailable in this session, so
+The user reported applying the migration successfully on 2026-10-09. A subsequent
+live RPC call using the application's configured server key succeeded and returned
+the expected summary fields and types. The new indexes have not been independently
+inspected or benchmarked in PostgreSQL. A browser was unavailable in this session, so
 interactive filters, the load-more button and authenticated admin pagination
 still need browser smoke testing after deployment. Re-measure the deployed site
 inside the Webcake iframe and directly on Vercel; the outer Webcake page also
