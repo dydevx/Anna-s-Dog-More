@@ -21,6 +21,31 @@ the updated first product-detail request took 420 ms; its next two took 57/47 ms
 The public summary query returned 221,614 bytes versus 1,542,232 bytes for the
 original full joined catalog (191 products), before applying any new SQL indexes.
 
+## Production verification after deployment (2026-10-09)
+
+HTTP checks of `https://anna-s-dog-more.vercel.app` confirmed the updated build:
+
+| Route | Uncompressed response bytes | Median complete response, 3 requests |
+| --- | ---: | ---: |
+| `/de` | 62,721 | 1,235 ms |
+| `/de/shop` | 266,320 | 925 ms |
+| `/de/shop/polsterbetten` | 267,604 | 860 ms |
+| `/de/product/classic-hundebett-bellagio` | 83,725 | 2,206 ms |
+| `/api/search?q=emma` | 665 | 420 ms |
+
+Network timings varied considerably; the last product request completed in
+452 ms. These small samples do not establish consistent browser load times.
+The live Shop payload was previously 1,665,781 bytes and is now 266,320 bytes,
+an 84% reduction. DE/EN listings render 24 initial cards and include the load-more
+button. Home responses report Vercel cache HIT. Dynamic page responses can report
+MISS while their public Supabase reads still use Next's server data cache.
+
+Both Webcake pages returned HTTP 200 and still embed the intended Vercel targets:
+`www.annasdogandmore.com` embeds `/`; `/Admin` embeds `/admin`. Unauthenticated
+requests to admin products/orders redirect to login. This verifies HTTP content
+and redirects; authenticated navigation, iframe login, filters and load-more
+interaction still require a browser smoke test.
+
 ## Application behavior
 
 - Public catalog reads use Next.js's shared data cache for 60 seconds. Home and
