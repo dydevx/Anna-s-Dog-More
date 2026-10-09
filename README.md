@@ -42,6 +42,13 @@ Run the SQL files in order through a controlled migration workflow:
 
 1. `database/migrations/001_initial_commerce.sql`
 2. `database/migrations/002_storage.sql`
+3. `database/migrations/003_contact_and_chf.sql`
+4. `database/migrations/004_variant_image_mapping.sql`
+5. `database/migrations/005_performance.sql`
+
+For an existing database, apply only migrations that have not already been run.
+Performance measurements, cache behavior and SQL Editor instructions are in
+[`docs/performance.md`](docs/performance.md).
 
 Then load the verified starter catalog:
 

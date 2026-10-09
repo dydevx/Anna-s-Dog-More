@@ -59,6 +59,15 @@ export type Product = {
   bundleItems?: Array<{ childSku: string; quantity: number }>;
 };
 
+export type ProductSummary = Pick<Product,
+  "id" | "categoryId" | "categorySlug" | "slug" | "name" | "basePrice" | "currency" | "featured" | "badge"
+> & {
+  images: ProductImage[];
+  available: boolean;
+  priceFrom: boolean;
+  facets: Record<string, string[]>;
+};
+
 export type CartLine = {
   id: string;
   productId: string;

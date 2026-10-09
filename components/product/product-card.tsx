@@ -1,19 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Locale, Product } from "@/types/catalog";
+import type { Locale, Product, ProductSummary } from "@/types/catalog";
+import { toProductSummary } from "@/lib/catalog-summary";
 import { formatMoney } from "@/lib/money";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
-export function ProductCard({ product, locale, priority = false }: { product: Product; locale: Locale; priority?: boolean }) {
+export function ProductCard({ product, locale, priority = false }: { product: Product | ProductSummary; locale: Locale; priority?: boolean }) {
   const t = getDictionary(locale);
   const primaryImage = product.images[0];
-  const pricedVariants = product.variants.filter((variant) => variant.active && variant.price !== null);
-  const from = product.productType === "configurable" || product.variants.length > 1 || product.variants.some((variant) => variant.price === null);
-  const soldOut = pricedVariants.every((variant) => variant.stockQuantity < 1);
+  const summary = "variants" in product ? toProductSummary(product) : product;
+  const from = summary.priceFrom;
+  const soldOut = !summary.available;
   return <article className="product-card">
     <Link className="product-image" href={`/${locale}/product/${product.slug}`}>
       {primaryImage
-        ? <Image src={primaryImage.url} alt={primaryImage.alt[locale]} fill sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw" priority={priority} />
+        ? <Image src={primaryImage.url} alt={primaryImage.alt[locale]} fill sizes="(max-width: 640px) 50vw, (max-width: 1100px) 33vw, 25vw" preload={priority} />
         : <span className="product-image-placeholder">{locale === "de" ? "Bild folgt" : "Image pending"}</span>}
       {product.badge && <span className="product-badge">{product.badge === "new" ? (locale === "de" ? "Neu" : "New") : "Sale"}</span>}
       {soldOut && <span className="product-badge muted-badge">{locale === "de" ? "Bestand folgt" : "Stock pending"}</span>}

@@ -1,9 +1,10 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
+import { cache } from "react";
 import { createAdminUserClient } from "@/lib/supabase/server";
 
-export async function requireAdmin() {
+export const requireAdmin = cache(async () => {
   let supabase: Awaited<ReturnType<typeof createAdminUserClient>>;
   let user: User | null;
 
@@ -23,4 +24,4 @@ export async function requireAdmin() {
 
   if (role !== "admin") redirect("/admin/login?error=forbidden");
   return user;
-}
+});

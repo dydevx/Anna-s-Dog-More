@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/lib/catalog-cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPaymentProvider } from "@/lib/payments";
 import { getEmailProvider } from "@/lib/email/provider";
@@ -24,6 +26,7 @@ export async function POST(request: Request) {
       p_payload_hash: event.payloadHash,
     });
     if (error) throw error;
+    revalidateTag(CATALOG_CACHE_TAG, { expire: 0 });
     const emailProvider = getEmailProvider();
     if (emailProvider) {
       const { data: order, error: orderError } = await admin.from("orders").select("email,locale,order_number,grand_total,currency,shipping_address,order_items(product_name,variant_description,sku,quantity,line_total)").eq("id", event.orderId).single();

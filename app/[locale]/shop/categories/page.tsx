@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
-import { getCategories, getProducts } from "@/lib/catalog";
+import { getCategories, getProductSummaries } from "@/lib/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 
@@ -28,7 +28,7 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
 
   const locale = rawLocale;
   const t = getDictionary(locale);
-  const [categories, products] = await Promise.all([getCategories(), getProducts()]);
+  const [categories, products] = await Promise.all([getCategories(), getProductSummaries()]);
 
   const directory = categories.map((category) => {
     const categoryProducts = products.filter((product) => product.categorySlug === category.slug);

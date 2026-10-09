@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { z } from "zod";
+import { revalidateTag } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/lib/catalog-cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createAdminUserClient } from "@/lib/supabase/server";
 
@@ -47,6 +49,7 @@ export async function POST(request: Request) {
       await bucket.remove([path]);
       throw recordError;
     }
+    revalidateTag(CATALOG_CACHE_TAG, { expire: 0 });
     return NextResponse.json({ url: publicUrl.publicUrl }, { status: 201 });
   } catch {
     return NextResponse.json({ error: "IMAGE_UPLOAD_FAILED" }, { status: 500 });

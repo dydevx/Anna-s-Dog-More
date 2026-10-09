@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle } from "@phosphor-icons/react/dist/ssr";
-import { getCategories, getProducts } from "@/lib/catalog";
+import { getCategories, getProductSummaries } from "@/lib/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { isLocale } from "@/lib/i18n/config";
 import { getSiteUrl } from "@/lib/site-url";
 import { ProductCard } from "@/components/product/product-card";
 
-export const revalidate = 0;
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -25,7 +25,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   if (!isLocale(rawLocale)) return null;
   const locale = rawLocale;
   const t = getDictionary(locale);
-  const [categoryList, productList] = await Promise.all([getCategories(), getProducts()]);
+  const [categoryList, productList] = await Promise.all([getCategories(), getProductSummaries()]);
   const categoryShowcases = [
     {
       slug: "decken",
@@ -68,7 +68,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
           alt={locale === "de" ? "Hund in einem cremefarbenen LABONI TEDDY Hundebett" : "Dog in a cream LABONI TEDDY dog bed"}
           fill
           preload
-          quality={90}
+          quality={75}
           sizes="(max-width: 820px) calc(100vw - 2rem), (max-width: 1440px) 54vw, 700px"
           style={{ objectFit: "cover", objectPosition: "46% 54%" }}
         />
@@ -79,7 +79,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       {homeCategories.map(({ category, image, alt }, index) => <Link key={category.id} className={`category-tile category-${index + 1}`} href={`/${locale}/shop/${category.slug}`}><Image src={image} alt={alt} fill sizes="(max-width: 768px) 100vw, 50vw" /><span><strong>{category.name[locale]}</strong><small>{category.description[locale]}</small></span></Link>)}
     </div></section>
 
-    <section className="section featured-section"><div className="section-heading stacked"><h2>{t.home.selected}</h2><p>{locale === "de" ? "Wohnliche Formen, belastbare Materialien und Details, die den Alltag mit Hund leichter machen." : "Considered forms, durable materials and details that make daily life with dogs easier."}</p></div><div className="product-grid">{featured.map((product, index) => <ProductCard key={product.id} product={product} locale={locale} priority={index < 2} />)}</div></section>
+    <section className="section featured-section"><div className="section-heading stacked"><h2>{t.home.selected}</h2><p>{locale === "de" ? "Wohnliche Formen, belastbare Materialien und Details, die den Alltag mit Hund leichter machen." : "Considered forms, durable materials and details that make daily life with dogs easier."}</p></div><div className="product-grid">{featured.map((product) => <ProductCard key={product.id} product={product} locale={locale} />)}</div></section>
 
     <section className="story-section"><div className="story-copy"><h2>{t.home.storyTitle}</h2><p>{t.home.storyBody}</p><Link className="button secondary-button" href={`/${locale}/about`}>{locale === "de" ? "Anna's kennenlernen" : "Meet Anna's"}</Link></div><div className="story-visual"><Image src="https://laboni.design/media/image/web_BT_Mood.jpg" alt={locale === "de" ? "Gerahmter Boston-Terrier-Kunstdruck in einem ruhigen Zuhause" : "Framed Boston Terrier art print in a calm home"} fill sizes="(max-width: 768px) 100vw, 45vw" /></div></section>
 

@@ -5,17 +5,22 @@ import { formatMoney } from "@/lib/money";
 import { createProductAction } from "../actions";
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminStatus } from "@/components/admin/admin-status";
+import { AdminPagination } from "@/components/admin/admin-pagination";
+import { adminPage, ADMIN_PAGE_SIZE } from "@/lib/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminProductsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default async function AdminProductsPage({ searchParams }: { searchParams: Promise<{ error?: string; page?: string }> }) {
   await requireAdmin();
   const query = await searchParams;
+  const page = adminPage(query.page);
+  const offset = (page - 1) * ADMIN_PAGE_SIZE;
   const admin = createAdminClient();
   const [{ data }, { data: categories }] = await Promise.all([
-    admin.from("products").select("id,name_de,slug,base_price,currency,active,featured,product_variants(stock_quantity,active)").order("updated_at", { ascending: false }),
+    admin.from("products").select("id,name_de,slug,base_price,currency,active,featured,product_variants(stock_quantity)").order("updated_at", { ascending: false }).order("id").range(offset, offset + ADMIN_PAGE_SIZE),
     admin.from("categories").select("id,name_de").order("sort_order"),
   ]);
+  const products = (data ?? []).slice(0, ADMIN_PAGE_SIZE);
 
   return (
     <>
@@ -23,19 +28,19 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
         <div>
           <p>Katalog</p>
           <h1>Produkte</h1>
-          <span>{data?.length ?? 0} Produkte im Katalog</span>
+          <span>{products.length} Produkte auf dieser Seite</span>
         </div>
       </header>
 
       {query.error && <div className="form-alert" role="alert">Produkt konnte nicht angelegt werden. Bitte Eingaben und Slug prüfen.</div>}
 
       <section className="admin-section admin-table-section" aria-label="Produktliste">
-        {(data ?? []).length > 0 ? (
+        {products.length > 0 ? (
           <div className="admin-table-wrap">
             <table className="admin-data-table admin-products-table">
               <thead><tr><th>Produkt</th><th>Preis</th><th>Bestand</th><th>Status</th></tr></thead>
               <tbody>
-                {(data ?? []).map((product) => {
+                {products.map((product) => {
                   const stock = (product.product_variants ?? []).reduce((sum, variant) => sum + Number(variant.stock_quantity), 0);
                   return (
                     <tr key={product.id}>
@@ -53,6 +58,7 @@ export default async function AdminProductsPage({ searchParams }: { searchParams
           <div className="admin-empty-state"><Cube size={30} aria-hidden="true" /><strong>Noch keine Produkte</strong><span>Legen Sie das erste Produkt über den Bereich unten an.</span></div>
         )}
       </section>
+      <AdminPagination page={page} hasNext={(data?.length ?? 0) > ADMIN_PAGE_SIZE} count={products.length} pathname="/admin/products" />
 
       <details className="admin-create-panel" open={Boolean(query.error)}>
         <summary>

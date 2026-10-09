@@ -3,11 +3,11 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { MagnifyingGlass, SlidersHorizontal, X } from "@phosphor-icons/react";
 import { ProductCard } from "@/components/product/product-card";
-import type { Category, Locale, Product } from "@/types/catalog";
+import type { Category, Locale, ProductSummary } from "@/types/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 
 type ListingProps = {
-  products: Product[];
+  products: ProductSummary[];
   categories: Category[];
   locale: Locale;
   initialCategory?: string;
@@ -34,9 +34,7 @@ export function ProductListing({ products, categories, locale, initialCategory, 
 
   const facets = useMemo(() => {
     const values = (key: string) => [...new Set(products.flatMap((product) => {
-      const variantValues = product.variants.map((variant) => variant.options[key]).filter(Boolean);
-      const attributeValues = product.attributes[key]?.split(",").map((value) => value.trim()).filter(Boolean) ?? [];
-      return [...variantValues, ...attributeValues];
+      return product.facets[key] ?? [];
     }))].toSorted((a, b) => a.localeCompare(b));
 
     return {
@@ -79,11 +77,8 @@ export function ProductListing({ products, categories, locale, initialCategory, 
     sort,
   }), [activePriceMax, availableOnly, category, colors, deferredQuery, materials, sizes, sort]);
   const visible = useMemo(() => {
-    const includesFacet = (product: Product, selected: string[], keys: string[]) => selected.length === 0 || selected.some((wanted) => {
-      const values = [
-        ...keys.flatMap((key) => product.variants.map((variant) => variant.options[key])),
-        ...keys.flatMap((key) => product.attributes[key]?.split(",").map((value) => value.trim()) ?? []),
-      ];
+    const includesFacet = (product: ProductSummary, selected: string[], keys: string[]) => selected.length === 0 || selected.some((wanted) => {
+      const values = keys.flatMap((key) => product.facets[key] ?? []);
       return values.includes(wanted);
     });
     const normalizedQuery = normalizeSearch(filterState.query);
@@ -96,7 +91,7 @@ export function ProductListing({ products, categories, locale, initialCategory, 
       && includesFacet(product, filterState.materials, ["material", "fabric"])
       && includesFacet(product, filterState.colors, ["color"])
       && includesFacet(product, filterState.sizes, ["size"])
-      && (!filterState.availableOnly || product.variants.some((variant) => variant.active && variant.price !== null && variant.stockQuantity > 0))
+      && (!filterState.availableOnly || product.available)
     );
 
     return filtered.toSorted((a, b) => {
@@ -107,6 +102,9 @@ export function ProductListing({ products, categories, locale, initialCategory, 
       return Number(b.featured) - Number(a.featured);
     });
   }, [filterState, featuredOnly, locale, products]);
+
+  const [expanded, setExpanded] = useState<{ filters: typeof filterState | null; count: number }>({ filters: null, count: 24 });
+  const visibleCount = expanded.filters === filterState ? expanded.count : 24;
 
   const toggle = (value: string, selected: string[], setSelected: (value: string[]) => void) => {
     setSelected(selected.includes(value) ? selected.filter((item) => item !== value) : [...selected, value]);
@@ -154,7 +152,12 @@ export function ProductListing({ products, categories, locale, initialCategory, 
       <div className="listing-grid">
         <aside className="filter-sidebar">{renderFilters("sidebar")}</aside>
         <div className="listing-results">
-          {visible.length ? <div className="product-grid listing-products">{visible.map((product) => <ProductCard key={product.id} product={product} locale={locale} />)}</div> : <div className="empty-state compact-empty"><h2>{locale === "de" ? "Keine passenden Produkte" : "No matching products"}</h2><p>{query.trim() ? (locale === "de" ? "Versuchen Sie einen anderen Produktnamen oder löschen Sie die Suche." : "Try another product name or clear the search.") : (locale === "de" ? "Entfernen Sie einen Filter und versuchen Sie es erneut." : "Remove a filter and try again.")}</p></div>}
+          {visible.length ? <div className="product-grid listing-products">{visible.slice(0, visibleCount).map((product) => <ProductCard key={product.id} product={product} locale={locale} />)}</div> : <div className="empty-state compact-empty"><h2>{locale === "de" ? "Keine passenden Produkte" : "No matching products"}</h2><p>{query.trim() ? (locale === "de" ? "Versuchen Sie einen anderen Produktnamen oder löschen Sie die Suche." : "Try another product name or clear the search.") : (locale === "de" ? "Entfernen Sie einen Filter und versuchen Sie es erneut." : "Remove a filter and try again.")}</p></div>}
+          {visibleCount < visible.length && <div className="listing-load-more">
+            <button className="button secondary-button" type="button" onClick={() => setExpanded({ filters: filterState, count: visibleCount + 24 })}>
+              {locale === "de" ? "Weitere Produkte anzeigen" : "Show more products"}
+            </button>
+          </div>}
         </div>
       </div>
       <div className="drawer-layer" data-state={filterOpen ? "open" : "closed"} inert={!filterOpen} onMouseDown={() => setFilterOpen(false)}><aside className="filter-drawer" data-state={filterOpen ? "open" : "closed"} role="dialog" aria-modal="true" aria-label={t.shop.filter} aria-hidden={!filterOpen} onMouseDown={(event) => event.stopPropagation()}>{renderFilters("drawer")}</aside></div>

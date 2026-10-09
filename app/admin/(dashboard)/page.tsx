@@ -9,6 +9,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { formatMoney } from "@/lib/money";
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminStatus } from "@/components/admin/admin-status";
+import { getDashboardSummary } from "@/lib/admin-dashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -18,19 +19,13 @@ export default async function AdminDashboard() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
-  const [{ data: recent }, { count: pending }, { data: today }, { data: stockLevels, error: stockLevelsError }] = await Promise.all([
+  const [{ data: recent, error: recentError }, summary] = await Promise.all([
     admin.from("orders").select("id,order_number,email,grand_total,currency,order_status,created_at").order("created_at", { ascending: false }).limit(8),
-    admin.from("orders").select("id", { count: "exact", head: true }).eq("order_status", "pending_payment"),
-    admin.from("orders").select("grand_total,currency").gte("created_at", start.toISOString()).eq("payment_status", "paid"),
-    admin.from("product_variants").select("stock_quantity,low_stock_threshold").eq("active", true),
+    getDashboardSummary(admin, start.toISOString()),
   ]);
 
-  if (stockLevelsError) throw new Error("Unable to load low-stock variants");
-
-  const lowStock = (stockLevels ?? []).filter(
-    (variant) => Number(variant.stock_quantity) <= Number(variant.low_stock_threshold),
-  ).length;
-  const revenue = (today ?? []).reduce((sum, order) => sum + Number(order.grand_total), 0);
+  if (recentError) throw new Error("Unable to load recent orders");
+  const lowStock = summary.low_stock;
   const formattedDate = new Intl.DateTimeFormat("de-CH", {
     weekday: "long",
     day: "2-digit",
@@ -54,12 +49,12 @@ export default async function AdminDashboard() {
       <section className="admin-metrics" aria-label="Shop Kennzahlen">
         <article>
           <div><span>Umsatz heute</span><CurrencyCircleDollar size={22} aria-hidden="true" /></div>
-          <strong>{formatMoney(revenue, today?.[0]?.currency ?? "CHF", "de")}</strong>
-          <small>{today?.length ?? 0} {(today?.length ?? 0) === 1 ? "bezahlte Bestellung" : "bezahlte Bestellungen"}</small>
+          <strong>{summary.revenue.length ? summary.revenue.map((item) => formatMoney(Number(item.total), item.currency, "de")).join(" · ") : formatMoney(0, "CHF", "de")}</strong>
+          <small>{summary.paid_count} {summary.paid_count === 1 ? "bezahlte Bestellung" : "bezahlte Bestellungen"}</small>
         </article>
         <article>
           <div><span>Offene Zahlungen</span><Package size={22} aria-hidden="true" /></div>
-          <strong>{pending ?? 0}</strong>
+          <strong>{summary.pending}</strong>
           <small>Bestellungen warten auf Zahlung</small>
         </article>
         <article data-alert={lowStock > 0 ? "true" : undefined}>

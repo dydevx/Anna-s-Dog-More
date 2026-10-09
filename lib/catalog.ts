@@ -1,14 +1,41 @@
 import { cache } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { categories as fallbackCategories, products as fallbackProducts } from "@/data/catalog";
-import type { Category, Product } from "@/types/catalog";
+import type { Category, Product, ProductSummary } from "@/types/catalog";
 import { isProductStorefrontReady } from "@/lib/catalog-readiness";
+import { toProductSummary } from "@/lib/catalog-summary";
+import { CATALOG_CACHE_TAG, CATALOG_REVALIDATE_SECONDS } from "@/lib/catalog-cache";
+
+export const SUMMARY_SELECT = "id,category_id,slug,name_de,name_en,product_type,base_price,currency,featured,active,categories(slug),product_images(id,url,alt_de,alt_en,sort_order),product_variants(active,price,stock_quantity,size,color,material,fabric),product_attributes(attribute_name,value_de,value_en)";
+const SEARCH_SELECT = SUMMARY_SELECT.replace("product_variants(active", "product_variants(sku,article_number,active") + ",description_de,description_en";
+
+type CatalogRow = {
+  id: string; category_id: string; slug: string; name_de: string; name_en: string;
+  short_description_de?: string | null; short_description_en?: string | null;
+  description_de?: string | null; description_en?: string | null;
+  product_type: Product["productType"]; base_price: string | number; currency: string;
+  featured: boolean; active: boolean; source_url?: string | null;
+  categories: { slug: string } | null;
+  product_images: Record<string, unknown>[];
+  product_variants: Record<string, unknown>[];
+  product_attributes: Record<string, unknown>[];
+};
 
 function publicClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      // Only public catalog reads use this client; private and checkout data stay uncached.
+      fetch: (input, init) => fetch(input, {
+        ...init,
+        cache: "force-cache",
+        next: { revalidate: CATALOG_REVALIDATE_SECONDS, tags: [CATALOG_CACHE_TAG] },
+      }),
+    },
+  });
 }
 
 function fallbackAllowed() {
@@ -18,7 +45,7 @@ function fallbackAllowed() {
 export const getCategories = cache(async (): Promise<Category[]> => {
   const client = publicClient();
   if (!client) return fallbackAllowed() ? fallbackCategories : [];
-  const { data, error } = await client.from("categories").select("*").eq("active", true).order("sort_order");
+  const { data, error } = await client.from("categories").select("id,slug,parent_id,name_de,name_en,description_de,description_en,image_url,sort_order").eq("active", true).order("sort_order");
   if (error) throw new Error(`Unable to load categories: ${error.message}`);
   return data.map((row) => ({
     id: row.id,
@@ -31,14 +58,21 @@ export const getCategories = cache(async (): Promise<Category[]> => {
   }));
 });
 
-export const getProducts = cache(async (): Promise<Product[]> => {
+async function loadProducts({ slug, categoryId, summary = false, search = false }: { slug?: string; categoryId?: string; summary?: boolean; search?: boolean } = {}): Promise<Product[]> {
   const client = publicClient();
-  if (!client) return fallbackAllowed() ? fallbackProducts.filter(isProductStorefrontReady) : [];
-  const { data, error } = await client
+  if (!client) return fallbackAllowed() ? fallbackProducts.filter((product) => isProductStorefrontReady(product)
+    && (!slug || product.slug === slug) && (!categoryId || product.categoryId === categoryId)) : [];
+  let query = client
     .from("products")
-    .select("*, categories(slug), product_images(*), product_variants(*), product_attributes(*)")
+    .select(summary ? (search ? SEARCH_SELECT : SUMMARY_SELECT) : "*, categories(slug), product_images(*), product_variants(*), product_attributes(*)")
     .eq("active", true)
     .order("created_at", { ascending: false });
+  if (slug) query = query.eq("slug", slug);
+  if (categoryId) query = query.eq("category_id", categoryId);
+  if (summary) query = query.order("sort_order", { referencedTable: "product_images", ascending: true })
+    .order("id", { referencedTable: "product_images", ascending: true })
+    .limit(1, { referencedTable: "product_images" });
+  const { data, error } = await query.overrideTypes<CatalogRow[], { merge: false }>();
   if (error) throw new Error(`Unable to load products: ${error.message}`);
   const products = data.map((row) => ({
     id: row.id,
@@ -72,8 +106,8 @@ export const getProducts = cache(async (): Promise<Product[]> => {
     })),
     variants: (row.product_variants ?? []).map((item: Record<string, unknown>) => ({
       id: String(item.id),
-      sku: String(item.sku),
-      articleNumber: String(item.article_number),
+      sku: String(item.sku ?? ""),
+      articleNumber: String(item.article_number ?? ""),
       price: item.price === null ? null : Number(item.price),
       compareAtPrice: item.compare_at_price === null ? null : Number(item.compare_at_price),
       currency: String(item.currency ?? row.currency),
@@ -89,20 +123,23 @@ export const getProducts = cache(async (): Promise<Product[]> => {
   })) as Product[];
 
   return products.filter(isProductStorefrontReady);
+}
+
+export const getProductSummaries = cache(async (): Promise<ProductSummary[]> =>
+  (await loadProducts({ summary: true })).map(toProductSummary));
+
+export const getProductBySlug = cache(async (slug: string) =>
+  (await loadProducts({ slug }))[0] ?? null);
+
+export const getProductsByCategory = cache(async (slug: string) => {
+  const category = (await getCategories()).find((item) => item.slug === slug);
+  return category ? (await loadProducts({ categoryId: category.id, summary: true })).map(toProductSummary) : [];
 });
-
-export async function getProductBySlug(slug: string) {
-  return (await getProducts()).find((product) => product.slug === slug) ?? null;
-}
-
-export async function getProductsByCategory(slug: string) {
-  return (await getProducts()).filter((product) => product.categorySlug === slug);
-}
 
 export async function searchProducts(query: string) {
   const term = query.trim().toLocaleLowerCase();
   if (term.length < 2) return [];
-  return (await getProducts()).filter((product) => {
+  return (await loadProducts({ summary: true, search: true })).filter((product) => {
     const haystack = [
       product.name.de,
       product.name.en,
@@ -112,5 +149,5 @@ export async function searchProducts(query: string) {
       ...product.variants.flatMap((variant) => [variant.sku, variant.articleNumber]),
     ].join(" ").toLocaleLowerCase();
     return haystack.includes(term);
-  }).slice(0, 8);
+  }).slice(0, 8).map(toProductSummary);
 }

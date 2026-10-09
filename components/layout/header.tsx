@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { List, MagnifyingGlass, ShoppingBag, UserCircle, X } from "@phosphor-icons/react";
 import { useCart } from "@/components/cart/cart-provider";
-import type { Locale, Product } from "@/types/catalog";
+import type { Locale, ProductSummary } from "@/types/catalog";
 import { getDictionary } from "@/lib/i18n/dictionaries";
 import { formatMoney } from "@/lib/money";
 
@@ -34,7 +34,7 @@ export function Header({ locale }: { locale: Locale }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<Product[]>([]);
+  const [results, setResults] = useState<ProductSummary[]>([]);
   const [settledQuery, setSettledQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
   const searching = query.trim().length >= 2 && settledQuery !== query;

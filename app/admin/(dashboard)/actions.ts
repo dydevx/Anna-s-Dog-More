@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
+import { CATALOG_CACHE_TAG } from "@/lib/catalog-cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/admin";
@@ -25,6 +26,7 @@ export async function updateProductAction(formData: FormData) {
 
   const { error } = await admin.from("products").update(parsed.data).eq("id", parsed.data.id);
   if (error) redirect(`/admin/products/${parsed.data.id}?error=save`);
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath("/admin/products"); revalidatePath("/de/shop"); revalidatePath("/en/shop");
   redirect(`/admin/products/${parsed.data.id}?saved=1`);
 }
@@ -35,6 +37,7 @@ export async function createProductAction(formData: FormData) {
   if (!parsed.success) redirect("/admin/products?error=invalid");
   const { data, error } = await createAdminClient().from("products").insert({ ...parsed.data, active: false, featured: false }).select("id").single();
   if (error || !data) redirect("/admin/products?error=save");
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath("/admin/products");
   redirect(`/admin/products/${data.id}?created=1`);
 }
@@ -47,6 +50,7 @@ export async function addVariantAction(formData: FormData) {
   const payload = { ...parsed.data, active: parsed.data.active && parsed.data.price !== null };
   const { error } = await createAdminClient().from("product_variants").insert(payload);
   if (error) redirect(`/admin/products/${parsed.data.product_id}?error=variant`);
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath(`/admin/products/${parsed.data.product_id}`);
   redirect(`/admin/products/${parsed.data.product_id}?saved=1`);
 }
@@ -57,6 +61,7 @@ export async function addProductImageAction(formData: FormData) {
   if (!parsed.success) redirect(`/admin/products/${formData.get("productId")}?error=image`);
   const { error } = await createAdminClient().from("product_images").insert({ ...parsed.data, sort_order: 0 });
   if (error) redirect(`/admin/products/${parsed.data.product_id}?error=image`);
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath(`/admin/products/${parsed.data.product_id}`);
   redirect(`/admin/products/${parsed.data.product_id}?saved=1`);
 }
@@ -67,6 +72,7 @@ export async function createCategoryAction(formData: FormData) {
   if (!parsed.success) redirect("/admin/categories?error=invalid");
   const { error } = await createAdminClient().from("categories").insert(parsed.data);
   if (error) redirect("/admin/categories?error=save");
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath("/admin/categories"); revalidatePath("/de/shop"); revalidatePath("/en/shop");
   redirect("/admin/categories?saved=1");
 }
@@ -77,6 +83,7 @@ export async function updateCategoryAction(formData: FormData) {
   if (!parsed.success) redirect("/admin/categories?error=invalid");
   const { error } = await createAdminClient().from("categories").update(parsed.data).eq("id", parsed.data.id);
   if (error) redirect("/admin/categories?error=save");
+  updateTag(CATALOG_CACHE_TAG);
   revalidatePath("/admin/categories"); revalidatePath("/de/shop"); revalidatePath("/en/shop");
   redirect("/admin/categories?saved=1");
 }
@@ -102,6 +109,7 @@ export async function updateVariantStockAction(formData: FormData) {
     .select("id")
     .single();
   if (updateError || !updated) redirect(`/admin/products/${parsed.data.productId}?error=stock`);
+  updateTag(CATALOG_CACHE_TAG);
 
   const delta = parsed.data.stock - Number(before.stock_quantity);
   if (delta) await admin.from("inventory_movements").insert({ variant_id: parsed.data.id, type: "adjustment", quantity: delta, reference: "admin-update" });
