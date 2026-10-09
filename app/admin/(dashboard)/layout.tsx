@@ -5,9 +5,10 @@ import { adminSignOutAction } from "@/app/admin/(auth)/login/actions";
 import { AdminNavigation } from "@/components/admin/admin-navigation";
 
 export const dynamic = "force-dynamic";
+const ADMIN_DISPLAY_NAME = "admin@anna's-dog&more.com";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireAdmin();
+  await requireAdmin();
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
@@ -23,7 +24,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Link className="admin-store-link" href="/de" target="_blank" rel="noreferrer">
             Zum Shop <ArrowSquareOut size={17} aria-hidden="true" />
           </Link>
-          <small title={user.email}>{user.email}</small>
+          <small title={ADMIN_DISPLAY_NAME}>{ADMIN_DISPLAY_NAME}</small>
           <form action={adminSignOutAction}>
             <button type="submit"><SignOut size={18} aria-hidden="true" /><span>Abmelden</span></button>
           </form>
