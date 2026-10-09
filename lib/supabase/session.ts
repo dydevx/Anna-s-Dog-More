@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { adminCookieOptions } from "@/lib/auth/admin-cookies";
 
 export async function refreshAdminSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -12,6 +13,7 @@ export async function refreshAdminSession(request: NextRequest) {
   if (!url || !key) return response;
 
   const supabase = createServerClient(url, key, {
+    cookieOptions: adminCookieOptions(),
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (values, cacheHeaders) => {

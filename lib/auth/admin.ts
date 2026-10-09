@@ -1,14 +1,14 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
-import { createUserClient } from "@/lib/supabase/server";
+import { createAdminUserClient } from "@/lib/supabase/server";
 
 export async function requireAdmin() {
-  let supabase: Awaited<ReturnType<typeof createUserClient>>;
+  let supabase: Awaited<ReturnType<typeof createAdminUserClient>>;
   let user: User | null;
 
   try {
-    supabase = await createUserClient();
+    supabase = await createAdminUserClient();
     ({ data: { user } } = await supabase.auth.getUser());
   } catch { redirect("/admin/login?error=config"); }
 

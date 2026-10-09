@@ -1,19 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { resolveAdminLogin } from "@/lib/auth/admin-login";
-import { createUserClient } from "@/lib/supabase/server";
+import { createAdminUserClient } from "@/lib/supabase/server";
 
-export async function adminLoginAction(formData: FormData) {
-  let loginFailed = false;
-
+export async function adminSignOutAction() {
   try {
-    const supabase = await createUserClient();
-    const email = resolveAdminLogin(String(formData.get("identifier") ?? ""));
-    const { error } = await supabase.auth.signInWithPassword({ email, password: String(formData.get("password") ?? "") });
-    loginFailed = Boolean(error);
-  } catch { redirect("/admin/login?error=config"); }
-
-  if (loginFailed) redirect("/admin/login?error=invalid");
-  redirect("/admin");
+    const supabase = await createAdminUserClient();
+    const { error } = await supabase.auth.signOut({ scope: "local" });
+    if (error) throw error;
+  } catch { redirect("/admin?error=signout"); }
+  redirect("/admin/login");
 }

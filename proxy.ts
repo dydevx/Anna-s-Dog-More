@@ -2,18 +2,16 @@ import { NextResponse, type NextRequest } from "next/server";
 import { refreshAdminSession } from "@/lib/supabase/session";
 
 export async function proxy(request: NextRequest) {
-  const isAdminPage = request.nextUrl.pathname === "/admin"
-    || request.nextUrl.pathname.startsWith("/admin/");
-  if (request.method === "GET" && isAdminPage
-    && request.nextUrl.pathname !== "/admin/open"
-    && request.headers.get("sec-fetch-dest") === "iframe") {
-    // Open a first-party page before login rather than relying on cross-site cookies.
-    const destination = new URL("/admin/open", request.url);
-    const response = NextResponse.rewrite(destination);
-    response.headers.set("Cache-Control", "private, no-store");
-    return response;
+  if (request.nextUrl.pathname.startsWith("/api/admin/")
+    && !["GET", "HEAD", "OPTIONS"].includes(request.method)
+    && request.headers.get("origin") !== new URL(request.url).origin) {
+    return NextResponse.json({ error: "INVALID_ORIGIN" }, { status: 403 });
   }
-  return refreshAdminSession(request);
+  const response = await refreshAdminSession(request);
+  response.headers.set("Content-Security-Policy",
+    "frame-ancestors 'self' https://annasdogandmore.com https://www.annasdogandmore.com");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
+  return response;
 }
 
 export const config = {

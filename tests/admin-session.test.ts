@@ -69,15 +69,18 @@ describe("admin session refresh", () => {
     expect(response.headers.get("location")).toBeNull();
   });
 
-  it("replaces embedded admin pages with a direct-access prompt before authentication", async () => {
+  it("keeps embedded admin pages in place and restricts framing to the approved sites", async () => {
     for (const path of ["/admin", "/admin/login", "/admin/orders/123"]) {
       const response = await proxy(new NextRequest(`https://shop.example.com${path}`, {
         headers: { "sec-fetch-dest": "iframe" },
       }));
-      expect(response.headers.get("x-middleware-rewrite")).toBe("https://shop.example.com/admin/open");
+      expect(response.headers.get("x-middleware-rewrite")).toBeNull();
       expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+      expect(response.headers.get("Content-Security-Policy")).toBe(
+        "frame-ancestors 'self' https://annasdogandmore.com https://www.annasdogandmore.com",
+      );
     }
-    expect(createServerClient).not.toHaveBeenCalled();
+    expect(createServerClient).toHaveBeenCalledTimes(3);
   });
 
   it("does not rewrite direct pages, the prompt itself, actions or admin APIs", async () => {
@@ -93,5 +96,23 @@ describe("admin session refresh", () => {
       expect(response.headers.get("x-middleware-next")).toBe("1");
     }
     expect(auth.getUser).toHaveBeenCalledTimes(requests.length);
+  });
+
+  it("blocks cross-origin and missing-origin admin API mutations", async () => {
+    for (const origin of [undefined, "https://evil.example.com", "https://www.annasdogandmore.com", "null"]) {
+      const response = await proxy(new NextRequest("https://shop.example.com/api/admin/product-images", {
+        method: "POST", headers: origin ? { origin } : {},
+      }));
+      expect(response.status).toBe(403);
+    }
+    expect(createServerClient).not.toHaveBeenCalled();
+  });
+
+  it("allows admin API mutations originating inside the app iframe", async () => {
+    const response = await proxy(new NextRequest("https://shop.example.com/api/admin/product-images", {
+      method: "POST", headers: { origin: "https://shop.example.com" },
+    }));
+    expect(response.headers.get("x-middleware-next")).toBe("1");
+    expect(auth.getUser).toHaveBeenCalledOnce();
   });
 });

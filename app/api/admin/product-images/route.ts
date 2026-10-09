@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import sharp from "sharp";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createUserClient } from "@/lib/supabase/server";
+import { createAdminUserClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
@@ -16,7 +16,7 @@ const fieldsSchema = z.object({
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/avif"]);
 
 export async function POST(request: Request) {
-  const userClient = await createUserClient().catch(() => null);
+  const userClient = await createAdminUserClient().catch(() => null);
   const user = userClient ? (await userClient.auth.getUser()).data.user : null;
   if (!user) return NextResponse.json({ error: "UNAUTHENTICATED" }, { status: 401 });
 

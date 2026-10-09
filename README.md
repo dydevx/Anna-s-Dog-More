@@ -112,11 +112,19 @@ Before production, activate an eligible Swiss merchant account, enable the requi
 
 ## Deploy to Vercel
 
-When Webcake embeds `/admin` from another domain, the app shows an **Admin öffnen**
-link that opens the administration page outside the iframe. Sign in on that page;
-cross-site iframe cookies cannot reliably preserve the session across admin sections.
-The admin Proxy also refreshes Supabase sessions before rendering and sends renewed
-cookies to both the page and the browser. Keep the Proxy enabled in deployments.
+Webcake can embed `/admin` from `https://annasdogandmore.com` or
+`https://www.annasdogandmore.com`. Admin authentication uses separate HttpOnly
+cookies with `SameSite=None; Secure; Partitioned` in production so current browsers
+can keep the session inside the iframe. Local HTTP development uses `SameSite=Lax`.
+Sign in again after deploying this change: old storefront session cookies are not
+used by Admin. Embedded and directly opened Admin have separate browser partitions.
+
+Login submits a native POST followed by a separate request to `/admin/session`
+to verify the browser actually stored its cookies. If cookie storage is blocked,
+the login page explains the problem and offers **Admin direkt öffnen** as a fallback.
+The admin Proxy refreshes sessions and sends renewed cookies to both the page and
+the browser. It also restricts framing to the approved domains and rejects API
+mutations without the application's own Origin. Keep the Proxy enabled in deployments.
 
 1. Push the project to a private Git repository and import it into Vercel.
 2. Add production environment variables in Vercel; keep secret/service-role values server-only.
