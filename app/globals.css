@@ -385,7 +385,7 @@ p { text-wrap: pretty; }
 .account-section dd { color: var(--muted); text-transform: capitalize; }
 
 .admin-login { min-height: 100dvh; padding: 2rem; display: grid; place-items: center; background: oklch(0.965 0.008 55); }
-.admin-login form { width: min(100%, 420px); padding: clamp(1.5rem, 5vw, 2.5rem); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); }
+.admin-login form, .admin-login-card { width: min(100%, 420px); padding: clamp(1.5rem, 5vw, 2.5rem); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface); }
 .admin-login .wordmark { align-items: flex-start; margin-bottom: 2.7rem; color: var(--accent); }
 .admin-login h1 { margin-bottom: .45rem; font-size: 1.55rem; letter-spacing: -.02em; }
 .admin-login-copy { max-width: 42ch; margin-bottom: 1.6rem; color: var(--muted); font-size: .8rem; }

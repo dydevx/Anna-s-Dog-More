@@ -112,6 +112,12 @@ Before production, activate an eligible Swiss merchant account, enable the requi
 
 ## Deploy to Vercel
 
+When Webcake embeds `/admin` from another domain, the app shows an **Admin öffnen**
+link that opens the administration page outside the iframe. Sign in on that page;
+cross-site iframe cookies cannot reliably preserve the session across admin sections.
+The admin Proxy also refreshes Supabase sessions before rendering and sends renewed
+cookies to both the page and the browser. Keep the Proxy enabled in deployments.
+
 1. Push the project to a private Git repository and import it into Vercel.
 2. Add production environment variables in Vercel; keep secret/service-role values server-only.
 3. Apply reviewed Supabase migrations and run the catalog importer once against the intended project.
