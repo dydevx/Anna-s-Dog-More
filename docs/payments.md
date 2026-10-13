@@ -150,3 +150,55 @@ Tài liệu chính thức:
   Admin. Không xử lý tranh chấp/chargeback tự động trong bản này.
 - Kiểm thử tự động dùng PostgreSQL local qua PGlite, kiểm tra chữ ký Stripe thật
   và mock API; vẫn cần thử end-to-end với tài khoản Stripe và Supabase thực.
+
+## 8. Checklist bàn giao sang Stripe Live của khách
+
+Ứng dụng hiện dùng Hosted Checkout trên server. Cần hai giá trị từ **cùng tài
+khoản Stripe Live của khách**:
+
+| Biến trên Vercel | Giá trị khách cần chuẩn bị | Nơi lấy |
+| --- | --- | --- |
+| `STRIPE_SECRET_KEY` | API key Live dùng ở server, ví dụ `sk_live_...` | Stripe Dashboard → chuyển sang Live → API keys |
+| `STRIPE_WEBHOOK_SECRET` | Signing secret `whsec_...` của webhook Live | Stripe Dashboard → Workbench → Webhooks → endpoint Live → Signing secret |
+
+Stripe khuyến nghị restricted API key `rk_live_...` với quyền phù hợp. Có thể đặt
+key này trong `STRIPE_SECRET_KEY`; cần cấp và kiểm tra quyền cho các thao tác
+Checkout/refund mà ứng dụng sử dụng trước khi vận hành. Không dùng key Sandbox
+hoặc signing secret từ `stripe listen` cho Live.
+
+`pk_live_...` (publishable key) **chưa cần trong phiên bản hiện tại**, vì frontend
+chuyển sang trang Stripe bằng URL Checkout do server tạo, không dùng Stripe.js
+hay Elements. Không cần khách gửi mật khẩu Stripe hoặc mã OTP.
+
+Khách nên tự nhập các secret vào Vercel Environment Variables hoặc chia sẻ qua
+công cụ quản lý secret; không gửi secret qua chat/email và không commit vào Git.
+Các hướng dẫn chính thức: [API keys](https://docs.stripe.com/keys),
+[webhook signing secret](https://docs.stripe.com/webhooks#retrieving-your-endpoints-secret).
+
+Các bước chuyển:
+
+1. Khách hoàn tất kích hoạt tài khoản Live, thông tin doanh nghiệp, tài khoản
+   ngân hàng nhận tiền và bật phương thức thẻ/TWINT cần dùng.
+2. Trong **Live của khách**, tạo webhook với URL
+   `https://TEN_MIEN_CHINH_THUC/api/webhooks/stripe`, chọn payload **Snapshot**,
+   và đăng ký đủ 5 sự kiện:
+   - `checkout.session.completed`
+   - `checkout.session.async_payment_succeeded`
+   - `checkout.session.async_payment_failed`
+   - `checkout.session.expired`
+   - `charge.refunded`
+3. Trong Vercel → Settings → Environment Variables → **Production**, cập nhật
+   hai secret và xác nhận:
+
+   ```dotenv
+   PAYMENT_PROVIDER=stripe
+   STRIPE_SECRET_KEY=YOUR_LIVE_SERVER_API_KEY
+   STRIPE_WEBHOOK_SECRET=YOUR_LIVE_ENDPOINT_SIGNING_SECRET
+   NEXT_PUBLIC_SITE_URL=https://TEN_MIEN_CHINH_THUC
+   ```
+
+4. Redeploy **commit mới nhất** để áp dụng cấu hình. Giữ Sandbox cho Development/
+   Preview; không thay `.env.local` sang Live chỉ để thử trên máy.
+5. Kiểm tra cấu hình Live, endpoint và các quyền API; dùng Sandbox để chạy các
+   tình huống thử. Khi có giao dịch mua thật, kiểm tra webhook trả 2xx, đơn `paid`,
+   tồn kho giảm đúng và tiền xuất hiện trong tài khoản Stripe của khách.
