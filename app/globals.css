@@ -347,6 +347,9 @@ p { text-wrap: pretty; }
 .confirmation-state > p { margin-bottom: .5rem; color: var(--muted); font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; }
 .confirmation-state h1 { margin-bottom: 1rem; font-family: var(--font-display), Georgia, serif; font-size: clamp(2.6rem, 6vw, 5rem); font-weight: 520; line-height: 1.08; }
 .confirmation-state > span { max-width: 58ch; margin-bottom: 1rem; color: var(--muted); }
+.confirmation-state [role="status"] { max-width: 58ch; margin-bottom: 1.5rem; }
+.confirmation-state [role="status"] p { color: var(--muted); line-height: 1.6; }
+.confirmation-state > .button + .button { margin-top: .75rem; }
 .confirmation-state > strong { margin-bottom: 2rem; font-size: 1.2rem; }
 
 .account-shell { min-height: 70dvh; }

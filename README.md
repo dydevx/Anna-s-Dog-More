@@ -13,7 +13,7 @@ Production-oriented bilingual commerce application for Anna's Dog & More in Zür
 - `data/catalog.ts` and `scripts/import-laboni.ts`: normalized source-backed starter catalog and controlled importer.
 - `PRODUCT.md` and `DESIGN.md`: product and visual-system decisions.
 
-The browser never supplies authoritative prices. Checkout validates the current variant, price, stock, country, and shipping method in PostgreSQL. A pending order reserves stock for 30 minutes. Only a verified provider webhook marks it paid and consumes inventory. Duplicate provider events are ignored by a unique event key.
+The browser never supplies authoritative prices. Checkout validates the current variant, price, stock, country, and shipping method in PostgreSQL. A pending order reserves stock through the payment session expiry plus a five-minute webhook grace period (36 minutes until session registration). Only a verified provider webhook marks it paid and consumes inventory. Duplicate provider events are ignored by a unique event key; checkout retries reuse the order through a separate checkout key.
 
 ## Local setup
 
@@ -45,6 +45,7 @@ Run the SQL files in order through a controlled migration workflow:
 3. `database/migrations/003_contact_and_chf.sql`
 4. `database/migrations/004_variant_image_mapping.sql`
 5. `database/migrations/005_performance.sql`
+6. `database/migrations/006_payment_lifecycle.sql`
 
 For an existing database, apply only migrations that have not already been run.
 Performance measurements, cache behavior and SQL Editor instructions are in
@@ -93,7 +94,9 @@ The storefront uses CHF as its single selling currency. The original numeric cat
 
 ## Stripe sandbox and production
 
-The Stripe adapter supports cards and offers TWINT for CHF orders. No card number or CVV reaches this application.
+Vietnamese setup and verification instructions: [`docs/payments.md`](docs/payments.md).
+
+The Stripe adapter supports cards and offers TWINT for CHF orders. No card number or CVV reaches this application. Sessions expire approximately 32 minutes after order creation; inventory holds include a five-minute webhook grace period. Signed failed/expired events release unpaid holds. Stripe Dashboard refunds synchronize through `charge.refunded` without automatically restocking physical products.
 
 For local testing:
 

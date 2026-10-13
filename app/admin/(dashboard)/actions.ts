@@ -124,8 +124,11 @@ export async function updateOrderAction(formData: FormData) {
   await requireAdmin();
   const parsed = z.object({ id: z.uuid(), order_status: z.enum(["pending_payment","paid","processing","shipped","completed","cancelled","refunded"]), fulfillment_status: z.enum(["unfulfilled","processing","shipped","fulfilled","cancelled"]) }).safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect(`/admin/orders/${formData.get("id")}?error=invalid`);
-  const { error } = await createAdminClient().from("orders").update({ order_status: parsed.data.order_status, fulfillment_status: parsed.data.fulfillment_status }).eq("id", parsed.data.id);
-  if (error) redirect(`/admin/orders/${parsed.data.id}?error=save`);
+  const { error } = await createAdminClient().rpc("update_order_fulfillment", { p_order_id: parsed.data.id, p_order_status: parsed.data.order_status, p_fulfillment_status: parsed.data.fulfillment_status });
+  if (error) {
+    const code = ["PAYMENT_REQUIRED", "REFUND_REQUIRED", "PAYMENT_CANCELLATION_REQUIRED", "INVALID_ORDER_TRANSITION"].find((value) => error.message.includes(value)) ?? "save";
+    redirect(`/admin/orders/${parsed.data.id}?error=${code}`);
+  }
   revalidatePath("/admin/orders"); revalidatePath(`/admin/orders/${parsed.data.id}`);
   redirect(`/admin/orders/${parsed.data.id}?saved=1`);
 }

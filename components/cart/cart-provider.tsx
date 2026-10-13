@@ -13,6 +13,7 @@ type CartContextValue = {
   setQuantity: (id: string, quantity: number) => void;
   removeLine: (id: string) => void;
   clear: () => void;
+  removePurchasedLines: (purchased: Array<{ id: string; quantity: number }>) => void;
 };
 
 const STORAGE_KEY = "annas-dog-cart-v3";
@@ -60,6 +61,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const clear = useCallback(() => setLines([]), []);
+  const removePurchasedLines = useCallback((purchased: Array<{ id: string; quantity: number }>) => {
+    setLines((current) => current.flatMap((line) => {
+      const bought = purchased.find((item) => item.id === line.id)?.quantity ?? 0;
+      return line.quantity > bought ? [{ ...line, quantity: line.quantity - bought }] : [];
+    }));
+  }, []);
   const value = useMemo(() => ({
     lines,
     hydrated,
@@ -70,7 +77,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setQuantity,
     removeLine,
     clear,
-  }), [addLine, clear, hydrated, lines, removeLine, setQuantity]);
+    removePurchasedLines,
+  }), [addLine, clear, hydrated, lines, removeLine, removePurchasedLines, setQuantity]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

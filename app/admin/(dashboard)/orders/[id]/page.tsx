@@ -13,6 +13,13 @@ export default async function AdminOrderDetail({ params, searchParams }: { param
   const { data: order } = await createAdminClient().from("orders").select("*,order_items(*),payments(*)").eq("id", id).single();
   if (!order) notFound();
   const address = order.shipping_address as Record<string, string>;
+  const canFulfill = ["paid", "partially_refunded"].includes(order.payment_status);
+  const paymentErrors: Record<string, string> = {
+    PAYMENT_REQUIRED: "Die Zahlung muss zuerst von Stripe bestätigt werden.",
+    REFUND_REQUIRED: "Bitte erstatten Sie die Zahlung in Stripe. Der Status wird automatisch übernommen.",
+    PAYMENT_CANCELLATION_REQUIRED: "Bitte lassen Sie die offene Stripe-Zahlungssitzung ablaufen. Eine Statusänderung beendet keine laufende Zahlung.",
+    INVALID_ORDER_TRANSITION: "Eine bezahlte Bestellung kann nicht auf Zahlung offen zurückgesetzt werden.",
+  };
 
   return (
     <>
@@ -27,7 +34,7 @@ export default async function AdminOrderDetail({ params, searchParams }: { param
       </header>
 
       {query.saved && <div className="admin-success" role="status">Status gespeichert.</div>}
-      {query.error && <div className="form-alert" role="alert">Status konnte nicht gespeichert werden.</div>}
+      {query.error && <div className="form-alert" role="alert">{paymentErrors[query.error] ?? "Status konnte nicht gespeichert werden."}</div>}
 
       <div className="order-admin-grid">
         <section className="admin-section">
@@ -46,11 +53,13 @@ export default async function AdminOrderDetail({ params, searchParams }: { param
             <h2>Status bearbeiten</h2>
             <form action={updateOrderAction}>
               <input type="hidden" name="id" value={order.id} />
-              <label>Bestellung<select name="order_status" defaultValue={order.order_status}><option value="pending_payment">Zahlung offen</option><option value="paid">Bezahlt</option><option value="processing">In Bearbeitung</option><option value="shipped">Versendet</option><option value="completed">Abgeschlossen</option><option value="cancelled">Storniert</option><option value="refunded">Erstattet</option></select></label>
-              <label>Versand<select name="fulfillment_status" defaultValue={order.fulfillment_status}><option value="unfulfilled">Offen</option><option value="processing">In Bearbeitung</option><option value="shipped">Versendet</option><option value="fulfilled">Erfüllt</option><option value="cancelled">Storniert</option></select></label>
+              <label>Bestellung<select name="order_status" defaultValue={order.order_status}><option value="pending_payment" disabled={canFulfill || order.payment_status === "refunded"}>Zahlung offen</option><option value="paid" disabled={!canFulfill}>Bezahlt</option><option value="processing" disabled={!canFulfill}>In Bearbeitung</option><option value="shipped" disabled={!canFulfill}>Versendet</option><option value="completed" disabled={!canFulfill}>Abgeschlossen</option><option value="cancelled" disabled={["pending", "processing"].includes(order.payment_status)}>Storniert</option><option value="refunded" disabled={order.payment_status !== "refunded"}>Erstattet</option></select></label>
+              <label>Versand<select name="fulfillment_status" defaultValue={order.fulfillment_status}><option value="unfulfilled">Offen</option><option value="processing" disabled={!canFulfill}>In Bearbeitung</option><option value="shipped" disabled={!canFulfill}>Versendet</option><option value="fulfilled" disabled={!canFulfill}>Erfüllt</option><option value="cancelled">Storniert</option></select></label>
               <button className="button primary-button full-button">Status speichern</button>
             </form>
             <dl><div><dt>Zahlung</dt><dd><AdminStatus status={order.payment_status} /></dd></div></dl>
+            {order.payments.map((payment: { id: string; provider: string; provider_payment_id: string; refunded_amount?: number }) => <p key={payment.id}>{payment.provider}: {payment.provider_payment_id}{Number(payment.refunded_amount) > 0 && <><br />Erstattet: {formatMoney(Number(payment.refunded_amount), order.currency, "de")}</>}</p>)}
+            <p>Erstattungen werden im <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener noreferrer">Stripe Dashboard</a> durchgeführt und automatisch synchronisiert. Zurückgesendete Ware separat im Lager erfassen.</p>
           </section>
           <section className="admin-panel">
             <h2>Lieferadresse</h2>
