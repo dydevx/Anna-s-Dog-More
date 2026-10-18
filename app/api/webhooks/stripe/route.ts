@@ -42,12 +42,13 @@ export async function POST(request: Request) {
       if (order.payment_status !== "paid") return NextResponse.json({ received: true });
       const locale: "de" | "en" = order.locale === "en" ? "en" : "de";
       const address = order.shipping_address as Record<string, string>;
+      const salutation = address.salutation === "herr" ? (locale === "de" ? "Herr" : "Mr") : address.salutation === "frau" ? (locale === "de" ? "Frau" : "Ms") : address.salutation === "divers" ? (locale === "de" ? "Divers" : "Other") : "";
       const message = {
         to: order.email,
         locale,
         orderNumber: order.order_number,
         total: formatMoney(Number(order.grand_total), order.currency, locale),
-        shippingAddress: [`${address.firstName ?? ""} ${address.lastName ?? ""}`.trim(), `${address.street ?? ""} ${address.houseNumber ?? ""}`.trim(), `${address.postalCode ?? ""} ${address.city ?? ""}`.trim(), address.country ?? ""].filter(Boolean),
+        shippingAddress: [`${salutation} ${address.firstName ?? ""} ${address.lastName ?? ""}`.trim(), `${address.street ?? ""} ${address.houseNumber ?? ""}`.trim(), `${address.postalCode ?? ""} ${address.city ?? ""}`.trim(), address.country ?? ""].filter(Boolean),
         lines: (order.order_items ?? []).map((item) => ({ name: item.product_name, variant: item.variant_description, sku: item.sku, quantity: item.quantity, lineTotal: formatMoney(Number(item.line_total), order.currency, locale) })),
       };
       await Promise.all([emailProvider.sendOrderPaid(message), emailProvider.sendShopNotification(message)]);

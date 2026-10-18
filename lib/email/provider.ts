@@ -9,6 +9,12 @@ export type OrderEmail = {
   lines: Array<{ name: string; variant: string; sku: string; quantity: number; lineTotal: string }>;
 };
 
+export type BankTransferDetails = {
+  accountHolder: string;
+  iban: string;
+  bic?: string;
+};
+
 export interface EmailProvider {
   sendOrderPaid(message: OrderEmail): Promise<void>;
   sendShopNotification(message: OrderEmail): Promise<void>;
@@ -16,6 +22,14 @@ export interface EmailProvider {
 
 function escapeHtml(value: string) {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+}
+
+export function getBankTransferDetails(): BankTransferDetails | null {
+  const accountHolder = process.env.BANK_ACCOUNT_HOLDER?.trim();
+  const iban = process.env.BANK_IBAN?.trim();
+  const bic = process.env.BANK_BIC?.trim();
+  if (!accountHolder || !iban) return null;
+  return { accountHolder, iban, ...(bic ? { bic } : {}) };
 }
 
 class ResendEmailProvider implements EmailProvider {
@@ -34,7 +48,11 @@ class ResendEmailProvider implements EmailProvider {
     const de = message.locale === "de";
     const heading = shopCopy ? `Neue bezahlte Bestellung ${message.orderNumber}` : de ? `Vielen Dank für Ihre Bestellung ${message.orderNumber}` : `Thank you for your order ${message.orderNumber}`;
     const itemRows = message.lines.map((line) => `<tr><td style="padding:10px 0;border-bottom:1px solid #ddd3c8"><strong>${escapeHtml(line.name)}</strong><br><small>${escapeHtml(line.variant || line.sku)} · SKU ${escapeHtml(line.sku)}</small></td><td style="padding:10px;text-align:center;border-bottom:1px solid #ddd3c8">${line.quantity}</td><td style="padding:10px 0;text-align:right;border-bottom:1px solid #ddd3c8">${escapeHtml(line.lineTotal)}</td></tr>`).join("");
-    return `<div style="font-family:Arial,sans-serif;color:#1e1e1e;background:#f8f3ec;padding:32px"><div style="max-width:640px;margin:auto;background:#fff;padding:32px"><p style="letter-spacing:.16em;font-size:12px">ANNA'S DOG &amp; MORE</p><h1 style="font-family:Georgia,serif;font-weight:400">${escapeHtml(heading)}</h1><table style="width:100%;border-collapse:collapse">${itemRows}</table><p style="font-size:18px;text-align:right"><strong>${de ? "Gesamt" : "Total"}: ${escapeHtml(message.total)}</strong></p><h2 style="font-size:15px">${de ? "Lieferadresse" : "Shipping address"}</h2><p>${message.shippingAddress.map(escapeHtml).join("<br>")}</p><p style="color:#6f675f;font-size:13px">Leimbachstrasse 200 · 8041 Zürich · Switzerland</p></div></div>`;
+    const bankTransfer = process.env.PAYMENT_PROVIDER === "bank_transfer";
+    const bank = bankTransfer ? getBankTransferDetails() : null;
+    if (bankTransfer && !bank) throw new Error("BANK_TRANSFER_DETAILS_NOT_CONFIGURED");
+    const bankSection = bank ? `<h2 style="font-size:15px">${de ? "Bankangaben" : "Bank details"}</h2><p>${de ? "Kontoinhaberin" : "Account holder"}: ${escapeHtml(bank.accountHolder)}<br>IBAN: ${escapeHtml(bank.iban)}${bank.bic ? `<br>BIC/SWIFT: ${escapeHtml(bank.bic)}` : ""}<br>${de ? "Zahlungsreferenz" : "Payment reference"}: ${escapeHtml(message.orderNumber)}</p>` : "";
+    return `<div style="font-family:Arial,sans-serif;color:#1e1e1e;background:#f8f3ec;padding:32px"><div style="max-width:640px;margin:auto;background:#fff;padding:32px"><p style="letter-spacing:.16em;font-size:12px">ANNA'S DOG &amp; MORE</p><h1 style="font-family:Georgia,serif;font-weight:400">${escapeHtml(heading)}</h1><table style="width:100%;border-collapse:collapse">${itemRows}</table><p style="font-size:18px;text-align:right"><strong>${de ? "Gesamt" : "Total"}: ${escapeHtml(message.total)}</strong></p>${bankSection}<h2 style="font-size:15px">${de ? "Lieferadresse" : "Shipping address"}</h2><p>${message.shippingAddress.map(escapeHtml).join("<br>")}</p><p style="color:#6f675f;font-size:13px">Leimbachstrasse 200 · 8041 Zürich · Switzerland</p></div></div>`;
   }
 
   async sendOrderPaid(message: OrderEmail) {

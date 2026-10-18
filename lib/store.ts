@@ -2,6 +2,8 @@ import type { Locale } from "@/types/catalog";
 
 export const STORE = {
   name: "Anna's Dog & More",
+  legalName: "Anna’s Dog & More",
+  owner: "Thi Diep Nguyen",
   street: "Leimbachstrasse 200",
   postalCode: "8041",
   city: "Zürich",

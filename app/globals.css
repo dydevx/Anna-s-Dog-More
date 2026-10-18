@@ -319,6 +319,7 @@ p { text-wrap: pretty; }
 .form-grid label { display: flex; flex-direction: column; gap: .4rem; color: var(--muted); font-size: .76rem; font-weight: 650; }
 .form-grid input, .form-grid select { width: 100%; min-height: 48px; padding: .7rem .8rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); color: var(--ink); }
 .form-grid input::placeholder { color: var(--muted); }
+.field-help { color: var(--muted); font-size: .7rem; font-weight: 500; line-height: 1.45; }
 .span-2 { grid-column: 1 / -1; }
 .span-1-5 { grid-column: span 1; }
 .shipping-options { display: grid; gap: .65rem; }
@@ -600,7 +601,7 @@ p { text-wrap: pretty; }
 .legal-warning { margin-bottom: 3rem; padding: 1rem; border-radius: var(--radius-control); background: var(--accent-soft); font-size: .8rem; }
 .legal-page section { padding: 1.5rem 0; display: grid; grid-template-columns: 220px 1fr; gap: 2rem; border-top: 1px solid var(--border); }
 .legal-page section h2 { font-size: 1rem; }
-.legal-page section p { max-width: 68ch; color: var(--muted); }
+.legal-page section p { max-width: 68ch; color: var(--muted); white-space: pre-line; }
 
 .drawer-layer { position: fixed; inset: 0; z-index: var(--z-modal); opacity: 0; visibility: hidden; pointer-events: none; background: color-mix(in oklch, var(--ink) 48%, transparent); transition: opacity var(--motion-fast) ease-in, visibility 0s linear var(--motion-fast); }
 .drawer-layer[data-state="open"] { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity var(--motion-base) ease-out; }

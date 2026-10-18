@@ -16,6 +16,7 @@ const validCheckout = {
   email: "kundin@example.ch",
   phone: "+41 44 000 00 00",
   shippingAddress: {
+    salutation: "frau" as const,
     firstName: "Anna",
     lastName: "Muster",
     street: "Leimbachstrasse",
@@ -63,10 +64,27 @@ describe("commerce primitives", () => {
   it("normalizes country codes and accepts a valid guest checkout", () => {
     const parsed = checkoutSchema.parse(validCheckout);
     expect(parsed.shippingAddress.country).toBe("CH");
+    expect(parsed.shippingAddress.salutation).toBe("frau");
     expect(parsed.items[0]).toEqual({
       variantId: "20000000-0000-4000-8000-000000000001",
       quantity: 2,
     });
+  });
+
+  it("rejects checkout addresses outside Switzerland", () => {
+    const parsed = checkoutSchema.safeParse({
+      ...validCheckout,
+      shippingAddress: { ...validCheckout.shippingAddress, country: "DE" },
+    });
+    expect(parsed.success).toBe(false);
+  });
+
+  it("rejects unsupported salutations", () => {
+    const parsed = checkoutSchema.safeParse({
+      ...validCheckout,
+      shippingAddress: { ...validCheckout.shippingAddress, salutation: "professor" },
+    });
+    expect(parsed.success).toBe(false);
   });
 
   it("rejects malformed variants and excessive quantities", () => {
