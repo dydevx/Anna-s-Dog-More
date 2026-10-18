@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createHash } from "node:crypto";
 
 export async function updateProductAction(formData: FormData) {
   await requireAdmin();
@@ -131,6 +132,36 @@ export async function updateOrderAction(formData: FormData) {
   }
   revalidatePath("/admin/orders"); revalidatePath(`/admin/orders/${parsed.data.id}`);
   redirect(`/admin/orders/${parsed.data.id}?saved=1`);
+}
+
+export async function confirmBankTransferPaymentAction(formData: FormData) {
+  await requireAdmin();
+  const parsed = z.object({ id: z.uuid() }).safeParse({ id: formData.get("id") });
+  if (!parsed.success) redirect(`/admin/orders/${formData.get("id")}?error=invalid`);
+  const admin = createAdminClient();
+  const [{ data: order, error: orderError }, { data: payment, error: paymentError }] = await Promise.all([
+    admin.from("orders").select("grand_total,currency,payment_status").eq("id", parsed.data.id).single(),
+    admin.from("payments").select("provider_payment_id").eq("order_id", parsed.data.id).eq("provider", "bank_transfer").maybeSingle(),
+  ]);
+  if (orderError || paymentError || !order || !payment) redirect(`/admin/orders/${parsed.data.id}?error=payment-read`);
+  if (["paid", "partially_refunded", "refunded"].includes(order.payment_status)) redirect(`/admin/orders/${parsed.data.id}?saved=payment`);
+  const eventId = `admin-bank-paid:${parsed.data.id}`;
+  const { error } = await admin.rpc("finalize_paid_order", {
+    p_order_id: parsed.data.id,
+    p_provider: "bank_transfer",
+    p_provider_payment_id: payment.provider_payment_id,
+    p_provider_event_id: eventId,
+    p_method: "bank_transfer",
+    p_amount: Number(order.grand_total),
+    p_currency: order.currency,
+    p_event_type: "admin.bank_transfer.paid",
+    p_payload_hash: createHash("sha256").update(eventId).digest("hex"),
+  });
+  if (error) redirect(`/admin/orders/${parsed.data.id}?error=payment-confirm`);
+  revalidatePath("/admin");
+  revalidatePath("/admin/orders");
+  revalidatePath(`/admin/orders/${parsed.data.id}`);
+  redirect(`/admin/orders/${parsed.data.id}?saved=payment`);
 }
 
 export async function createShippingAction(formData: FormData) {

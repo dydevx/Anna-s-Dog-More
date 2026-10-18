@@ -352,6 +352,9 @@ p { text-wrap: pretty; }
 .confirmation-state [role="status"] p { color: var(--muted); line-height: 1.6; }
 .confirmation-state > .button + .button { margin-top: .75rem; }
 .confirmation-state > strong { margin-bottom: 2rem; font-size: 1.2rem; }
+.bank-transfer-details { width: min(100%, 520px); margin: 0 0 2rem; padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-control); background: var(--surface); text-align: left; }
+.bank-transfer-details h2 { margin-bottom: .7rem; font-size: 1rem; }
+.bank-transfer-details p { color: var(--muted); line-height: 1.7; overflow-wrap: anywhere; }
 
 .account-shell { min-height: 70dvh; }
 .auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { isLocale } from "@/lib/i18n/config";
 import { PaymentConfirmation } from "@/components/checkout/payment-confirmation";
 import type { PublicOrderStatus } from "@/lib/payments/order-status";
+import { getBankTransferDetails } from "@/lib/email/provider";
 
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false }, referrer: "no-referrer" };
@@ -17,5 +18,6 @@ export default async function ConfirmationPage({ params, searchParams }: { param
     const { data, error } = await createAdminClient().from("orders").select("order_number,payment_status,grand_total,currency").eq("public_token", token.data).maybeSingle();
     if (!error) order = data;
   } catch { /* The client offers retry during a database outage. */ }
-  return <PaymentConfirmation locale={locale} token={token.data} initialOrder={order} />;
+  const bankTransfer = process.env.PAYMENT_PROVIDER === "stripe" ? null : getBankTransferDetails();
+  return <PaymentConfirmation locale={locale} token={token.data} initialOrder={order} bankTransfer={bankTransfer} />;
 }

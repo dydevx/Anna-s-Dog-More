@@ -3,7 +3,7 @@ import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { formatMoney } from "@/lib/money";
-import { updateOrderAction } from "../../actions";
+import { confirmBankTransferPaymentAction, updateOrderAction } from "../../actions";
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminStatus } from "@/components/admin/admin-status";
 
@@ -14,11 +14,15 @@ export default async function AdminOrderDetail({ params, searchParams }: { param
   if (!order) notFound();
   const address = order.shipping_address as Record<string, string>;
   const canFulfill = ["paid", "partially_refunded"].includes(order.payment_status);
+  const bankPayment = order.payments.find((payment: { provider: string }) => payment.provider === "bank_transfer");
+  const canConfirmBankPayment = Boolean(bankPayment && ["pending", "processing"].includes(order.payment_status));
   const paymentErrors: Record<string, string> = {
-    PAYMENT_REQUIRED: "Die Zahlung muss zuerst von Stripe bestätigt werden.",
-    REFUND_REQUIRED: "Bitte erstatten Sie die Zahlung in Stripe. Der Status wird automatisch übernommen.",
-    PAYMENT_CANCELLATION_REQUIRED: "Bitte lassen Sie die offene Stripe-Zahlungssitzung ablaufen. Eine Statusänderung beendet keine laufende Zahlung.",
+    PAYMENT_REQUIRED: "Der Zahlungseingang muss zuerst bestätigt werden.",
+    REFUND_REQUIRED: "Die Rückerstattung muss zuerst über die ursprüngliche Zahlungsart erfolgen.",
+    PAYMENT_CANCELLATION_REQUIRED: "Eine offene Zahlung kann nicht über die normale Statusauswahl storniert werden.",
     INVALID_ORDER_TRANSITION: "Eine bezahlte Bestellung kann nicht auf Zahlung offen zurückgesetzt werden.",
+    "payment-read": "Die Bankzahlung konnte nicht geladen werden.",
+    "payment-confirm": "Der Zahlungseingang konnte nicht bestätigt werden.",
   };
 
   return (
@@ -51,6 +55,7 @@ export default async function AdminOrderDetail({ params, searchParams }: { param
         <aside>
           <section className="admin-panel">
             <h2>Status bearbeiten</h2>
+            {canConfirmBankPayment && <form action={confirmBankTransferPaymentAction}><input type="hidden" name="id" value={order.id} /><button className="button primary-button full-button">Zahlungseingang bestätigen</button></form>}
             <form action={updateOrderAction}>
               <input type="hidden" name="id" value={order.id} />
               <label>Bestellung<select name="order_status" defaultValue={order.order_status}><option value="pending_payment" disabled={canFulfill || order.payment_status === "refunded"}>Zahlung offen</option><option value="paid" disabled={!canFulfill}>Bezahlt</option><option value="processing" disabled={!canFulfill}>In Bearbeitung</option><option value="shipped" disabled={!canFulfill}>Versendet</option><option value="completed" disabled={!canFulfill}>Abgeschlossen</option><option value="cancelled" disabled={["pending", "processing"].includes(order.payment_status)}>Storniert</option><option value="refunded" disabled={order.payment_status !== "refunded"}>Erstattet</option></select></label>
@@ -59,11 +64,11 @@ export default async function AdminOrderDetail({ params, searchParams }: { param
             </form>
             <dl><div><dt>Zahlung</dt><dd><AdminStatus status={order.payment_status} /></dd></div></dl>
             {order.payments.map((payment: { id: string; provider: string; provider_payment_id: string; refunded_amount?: number }) => <p key={payment.id}>{payment.provider}: {payment.provider_payment_id}{Number(payment.refunded_amount) > 0 && <><br />Erstattet: {formatMoney(Number(payment.refunded_amount), order.currency, "de")}</>}</p>)}
-            <p>Erstattungen werden im <a href="https://dashboard.stripe.com/payments" target="_blank" rel="noopener noreferrer">Stripe Dashboard</a> durchgeführt und automatisch synchronisiert. Zurückgesendete Ware separat im Lager erfassen.</p>
+            <p>Bei Vorauskasse den Zahlungseingang erst bestätigen, wenn der vollständige Betrag auf dem Bankkonto eingegangen ist. Rückerstattungen werden per Banküberweisung manuell ausgeführt.</p>
           </section>
           <section className="admin-panel">
             <h2>Lieferadresse</h2>
-            <address>{address.firstName} {address.lastName}<br />{address.street} {address.houseNumber}<br />{address.postalCode} {address.city}<br />{address.country}</address>
+            <address>{address.firstName} {address.lastName}<br />{address.company && <>{address.company}<br /></>}{address.street} {address.houseNumber}<br />{address.postalCode} {address.city}<br />{address.country}</address>
           </section>
         </aside>
       </div>

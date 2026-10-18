@@ -1,13 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), select: vi.fn(), eq: vi.fn(), maybeSingle: vi.fn(),
   name: "stripe", getPayment: vi.fn(), assertConfigured: vi.fn(), createPayment: vi.fn(), expirePayment: vi.fn(), verifyWebhook: vi.fn(), rateLimit: vi.fn(),
+  sendOrderConfirmation: vi.fn(), sendShopNotification: vi.fn(),
+  emailProvider: null as null | { sendOrderConfirmation: ReturnType<typeof vi.fn>; sendShopNotification: ReturnType<typeof vi.fn> },
+  bankDetails: null as null | { accountHolder: string; iban: string; bic?: string },
 }));
 vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({ rpc: mocks.rpc, from: () => ({ select: mocks.select }) }) }));
 vi.mock("@/lib/supabase/server", () => ({ createUserClient: async () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }) }));
 vi.mock("@/lib/payments", () => ({ getPaymentProvider: () => mocks }));
 vi.mock("@/lib/rate-limit", () => ({ rateLimit: mocks.rateLimit, requestIp: () => "test" }));
 vi.mock("next/cache", () => ({ revalidateTag: vi.fn() }));
-vi.mock("@/lib/email/provider", () => ({ getEmailProvider: () => null }));
+vi.mock("@/lib/email/provider", () => ({ getEmailProvider: () => mocks.emailProvider, getBankTransferDetails: () => mocks.bankDetails }));
 import { POST as checkout } from "@/app/api/checkout/route";
 import { POST as webhook } from "@/app/api/webhooks/stripe/route";
 import { GET as status } from "@/app/api/checkout/status/route";
@@ -25,11 +28,14 @@ function webhookRequest() { return new Request("https://shop.example.ch/api/webh
 describe("payment routes", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    process.env.PAYMENT_PROVIDER = "stripe";
+    mocks.emailProvider = null;
+    mocks.bankDetails = null;
     mocks.rateLimit.mockResolvedValue(true);
     mocks.select.mockImplementation((columns: string) => columns === "provider_payment_id"
       ? { eq: () => ({ eq: () => ({ maybeSingle: mocks.maybeSingle }) }) } : { eq: mocks.eq });
     mocks.maybeSingle.mockResolvedValue({ data: null, error: null });
-    mocks.eq.mockResolvedValue({ data: [{ product_name: "Test", variant_description: "", unit_price: 10, quantity: 1 }], error: null });
+    mocks.eq.mockResolvedValue({ data: [{ product_name: "Test", variant_description: "", sku: "TEST", unit_price: 10, quantity: 1, line_total: 10 }], error: null });
     mocks.rpc.mockImplementation(async (name: string) => name === "create_checkout_order"
       ? { data: [{ order_id: id, public_token: id, order_number: "AD-TEST", grand_total: 15, currency: "CHF", payment_expires_at: 2000000000 }], error: null }
       : { data: true, error: null });
@@ -72,6 +78,18 @@ describe("payment routes", () => {
     const response = await checkout(checkoutRequest());
     expect(await response.json()).toMatchObject({ redirectUrl: "https://checkout.stripe.com/existing" });
     expect(mocks.createPayment).not.toHaveBeenCalled();
+  });
+  it("creates a bank-transfer order and emails the confirmation before redirecting", async () => {
+    process.env.PAYMENT_PROVIDER = "bank_transfer";
+    mocks.bankDetails = { accountHolder: "Anna's Dog & More", iban: "CH00 0000 0000 0000 0000 0" };
+    mocks.emailProvider = { sendOrderConfirmation: mocks.sendOrderConfirmation, sendShopNotification: mocks.sendShopNotification };
+    const response = await checkout(checkoutRequest());
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ token: id, redirectUrl: `/en/checkout/confirmation?token=${id}` });
+    expect(mocks.createPayment).not.toHaveBeenCalled();
+    expect(mocks.rpc).toHaveBeenCalledWith("apply_payment_event", expect.objectContaining({ p_provider: "bank_transfer", p_outcome: "pending" }));
+    expect(mocks.sendOrderConfirmation).toHaveBeenCalledWith(expect.objectContaining({ orderNumber: "AD-TEST", paymentStatus: "awaiting_bank_transfer" }));
+    expect(mocks.sendShopNotification).toHaveBeenCalled();
   });
   it("returns a retryable error for a verified webhook database failure", async () => {
     mocks.rpc.mockResolvedValue({ error: new Error("DB_FAILURE") });

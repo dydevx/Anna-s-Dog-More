@@ -47,11 +47,12 @@ export async function POST(request: Request) {
         to: order.email,
         locale,
         orderNumber: order.order_number,
+        paymentStatus: "paid" as const,
         total: formatMoney(Number(order.grand_total), order.currency, locale),
-        shippingAddress: [`${salutation} ${address.firstName ?? ""} ${address.lastName ?? ""}`.trim(), `${address.street ?? ""} ${address.houseNumber ?? ""}`.trim(), `${address.postalCode ?? ""} ${address.city ?? ""}`.trim(), address.country ?? ""].filter(Boolean),
+        shippingAddress: [`${salutation} ${address.firstName ?? ""} ${address.lastName ?? ""}`.trim(), address.company ?? "", `${address.street ?? ""} ${address.houseNumber ?? ""}`.trim(), `${address.postalCode ?? ""} ${address.city ?? ""}`.trim(), address.country ?? ""].filter(Boolean),
         lines: (order.order_items ?? []).map((item) => ({ name: item.product_name, variant: item.variant_description, sku: item.sku, quantity: item.quantity, lineTotal: formatMoney(Number(item.line_total), order.currency, locale) })),
       };
-      await Promise.all([emailProvider.sendOrderPaid(message), emailProvider.sendShopNotification(message)]);
+      await Promise.all([emailProvider.sendOrderConfirmation(message), emailProvider.sendShopNotification(message)]);
     }
     return NextResponse.json({ received: true });
   } catch {
