@@ -7,6 +7,7 @@ const supabaseHostname = (() => {
 
 const nextConfig: NextConfig = {
   images: {
+    unoptimized: true,
     remotePatterns: [
       { protocol: "https", hostname: "laboni.design", pathname: "/media/image/**" },
       ...(supabaseHostname ? [{ protocol: "https" as const, hostname: supabaseHostname, pathname: "/storage/v1/object/public/product-images/**" }] : []),
